@@ -1,0 +1,45 @@
+[
+  {
+    "key": "ctrl+shift+k",
+    "command": "workbench.action.tasks.runTask",
+    "args": "🚀 Start Karatoken Dev"
+  },
+  {
+    "key": "ctrl+shift+f",
+    "command": "workbench.action.tasks.runTask", 
+    "args": "🔧 Fix All Issues"
+  },
+  {
+    "key": "ctrl+shift+d",
+    "command": "workbench.view.debug",
+    "when": "!inDebugMode"
+  },
+  {
+    "key": "ctrl+shift+t",
+    "command": "workbench.action.terminal.toggleTerminal"
+  },
+  {
+    "key": "ctrl+shift+e",
+    "command": "workbench.view.explorer"
+  },
+  {
+    "key": "ctrl+shift+g",
+    "command": "workbench.view.scm"
+  },
+  {
+    "key": "ctrl+shift+x",
+    "command": "workbench.view.extensions"
+  },
+  {
+    "key": "ctrl+shift+p",
+    "command": "workbench.action.showCommands"
+  },
+  {
+    "key": "ctrl+shift+r",
+    "command": "workbench.action.reloadWindow"
+  },
+  {
+    "key": "ctrl+k ctrl+s",
+    "command": "workbench.action.openGlobalKeybindings"
+  }
+]
