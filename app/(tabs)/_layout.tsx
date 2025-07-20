@@ -36,20 +36,29 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="studio"
+        options={{
+          title: 'Studio',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="music-note" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="challenges"
+        options={{
+          title: 'Challenges',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="emoji-events" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="leaderboard"
         options={{
           title: 'Leaderboard',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="leaderboard" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="battle"
-        options={{
-          title: 'Battle',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="flash-on" size={size} color={color} />
           ),
         }}
       />

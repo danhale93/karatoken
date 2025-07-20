@@ -90,12 +90,28 @@ export default function HomeScreen() {
         <View style={styles.authPrompt}>
           <MaterialIcons name="mic" size={80} color="#6B46C1" />
           <Text style={styles.authTitle}>Welcome to Karatoken</Text>
-          <Text style={styles.authSubtitle}>Sign in to start your karaoke journey</Text>
+          <Text style={styles.authSubtitle}>
+            The Future of Karaoke - Sing, Compete, Earn $KARA
+          </Text>
+          <View style={styles.featuresPreview}>
+            <View style={styles.previewFeature}>
+              <MaterialIcons name="auto-awesome" size={24} color="#8B5CF6" />
+              <Text style={styles.previewText}>AI Studio</Text>
+            </View>
+            <View style={styles.previewFeature}>
+              <MaterialIcons name="paid" size={24} color="#F59E0B" />
+              <Text style={styles.previewText}>Earn Crypto</Text>
+            </View>
+            <View style={styles.previewFeature}>
+              <MaterialIcons name="emoji-events" size={24} color="#10B981" />
+              <Text style={styles.previewText}>Compete</Text>
+            </View>
+          </View>
           <TouchableOpacity 
             style={styles.authButton}
             onPress={() => router.push('/(auth)/sign-in')}
           >
-            <Text style={styles.authButtonText}>Get Started</Text>
+            <Text style={styles.authButtonText}>Start Your Journey</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -183,6 +199,118 @@ export default function HomeScreen() {
           />
         </View>
 
+        {/* Trending & Viral Content */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>🔥 Trending Now</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={[
+              {
+                id: '1',
+                title: 'Viral Duet Challenge',
+                singer: '@karastar_jenny',
+                views: '1.2M',
+                song: 'Perfect Duet',
+                thumbnail: 'https://picsum.photos/seed/viral1/120/120.webp'
+              },
+              {
+                id: '2',
+                title: 'AI Genre Swap Magic',
+                singer: '@ai_vocalist',
+                views: '850K',
+                song: 'Pop → Jazz Transform',
+                thumbnail: 'https://picsum.photos/seed/viral2/120/120.webp'
+              }
+            ]}
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.trendingCard}>
+                <Image source={{ uri: item.thumbnail }} style={styles.trendingThumbnail} />
+                <View style={styles.trendingInfo}>
+                  <Text style={styles.trendingTitle}>{item.title}</Text>
+                  <Text style={styles.trendingSinger}>{item.singer}</Text>
+                  <Text style={styles.trendingSong}>{item.song}</Text>
+                  <View style={styles.trendingStats}>
+                    <MaterialIcons name="play-arrow" size={16} color="#10B981" />
+                    <Text style={styles.trendingViews}>{item.views} views</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          />
+        </View>
+
+        {/* AI Studio Spotlight */}
+        <View style={styles.section}>
+          <LinearGradient
+            colors={['#8B5CF6', '#A855F7']}
+            style={styles.aiSpotlightCard}
+          >
+            <View style={styles.aiSpotlightContent}>
+              <MaterialIcons name="auto-awesome" size={40} color="#FFFFFF" />
+              <View style={styles.aiSpotlightText}>
+                <Text style={styles.aiSpotlightTitle}>AI Studio Available</Text>
+                <Text style={styles.aiSpotlightDescription}>
+                  Create original songs with AI assistance
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.aiSpotlightButton}
+                onPress={() => router.push('/(tabs)/studio')}
+              >
+                <Text style={styles.aiSpotlightButtonText}>Try Now</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Featured Creators */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>👑 Featured Creators</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={[
+              {
+                id: '1',
+                name: 'VocalQueen_Sarah',
+                earnings: '2,450',
+                badge: '👑',
+                avatar: 'https://picsum.photos/seed/creator1/60/60.webp'
+              },
+              {
+                id: '2',
+                name: 'AI_Composer_Mike',
+                earnings: '1,980',
+                badge: '🤖',
+                avatar: 'https://picsum.photos/seed/creator2/60/60.webp'
+              }
+            ]}
+            renderItem={({ item }) => (
+              <View style={styles.creatorCard}>
+                <Image source={{ uri: item.avatar }} style={styles.creatorAvatar} />
+                <Text style={styles.creatorBadge}>{item.badge}</Text>
+                <Text style={styles.creatorName}>{item.name}</Text>
+                <Text style={styles.creatorEarnings}>{item.earnings} KARA</Text>
+              </View>
+            )}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          />
+        </View>
+
         {/* Daily Challenge */}
         <View style={styles.challengeSection}>
           <LinearGradient
@@ -193,9 +321,12 @@ export default function HomeScreen() {
               <MaterialIcons name="emoji-events" size={40} color="#FFFFFF" />
               <Text style={styles.challengeTitle}>Daily Challenge</Text>
               <Text style={styles.challengeDescription}>
-                Sing "Bohemian Rhapsody" and earn 100 KRT!
+                Sing "Bohemian Rhapsody" and earn 100 KARA!
               </Text>
-              <TouchableOpacity style={styles.challengeButton}>
+              <TouchableOpacity 
+                style={styles.challengeButton}
+                onPress={() => router.push('/(tabs)/challenges')}
+              >
                 <Text style={styles.challengeButtonText}>Accept Challenge</Text>
               </TouchableOpacity>
             </View>
