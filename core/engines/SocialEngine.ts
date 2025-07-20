@@ -42,20 +42,41 @@ export default class SocialEngine extends EventEmitter {
     return battle;
   }
 
-  async joinBattle(battleId: string, user: any): Promise<void> {
+  async joinBattle(battleId: string, user: any): Promise<any> {
     const battle = this.activeBattles.get(battleId);
     if (battle) {
       battle.participants.push(user);
-      console.log(`👤 ${user.username} joined battle ${battleId}`);
+      console.log(`👤 ${user.username || 'Anonymous'} joined battle ${battleId}`);
       this.emit('battleJoined', { battle, user });
+      return battle;
     }
+    throw new Error(`Battle ${battleId} not found`);
+  }
+
+  async connectToAudience(battleId: string): Promise<any> {
+    console.log(`🎭 Connecting to audience for battle ${battleId}`);
+    return {
+      connectionId: `audience_${Date.now()}`,
+      viewerCount: Math.floor(Math.random() * 1000) + 100,
+      isLive: true
+    };
+  }
+
+  async updateLeaderboards(performance: any, analysis: any): Promise<void> {
+    console.log(`📊 Updating leaderboards with score: ${performance.score || analysis.score}`);
+    this.emit('leaderboardUpdated', { performance, analysis });
+  }
+
+  async shareToplatform(performance: any, platform: string): Promise<void> {
+    console.log(`📱 Sharing performance to ${platform}`);
+    this.emit('performanceShared', { performance, platform });
   }
 
   async scoreBattle(battleId: string, scores: any): Promise<void> {
     const battle = this.activeBattles.get(battleId);
     if (battle) {
       battle.scores = scores;
-      const winnerScore = Math.max(...Object.values(scores));
+      const winnerScore = Math.max(...Object.values(scores) as number[]);
       console.log(`🏆 Battle scored! Winner score: ${winnerScore}`);
       this.emit('battle:scored', winnerScore);
     }

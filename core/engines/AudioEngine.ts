@@ -642,7 +642,7 @@ export default class AudioEngine extends EventEmitter {
   private async applyCulturalProcessingEffects(stems: any, effects: string[]): Promise<any> {
     DEBUG.log.info(`🎚️ Applying cultural effects: ${effects.join(', ')}`);
     
-    const effectsChain = {
+    const effectsChain: { [key: string]: any } = {
       'tape_saturation': { warmth: 0.6, saturation: 0.4 },
       'heavy_distortion': { drive: 0.8, tone: 'dark' },
       'forest_reverb': { reverb: 'natural', size: 'large', decay: 'long' },
@@ -819,7 +819,7 @@ export default class AudioEngine extends EventEmitter {
     return new Promise((resolve) => {
       recording.mediaRecorder.onstop = () => {
         const blob = new Blob(recording.chunks, { type: 'audio/wav' });
-        recording.stream.getTracks().forEach(track => track.stop());
+        recording.stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
         
         resolve({
           audioBlob: blob,

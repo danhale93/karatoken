@@ -251,7 +251,7 @@ export default class AIEngine extends EventEmitter {
   private async applyVoiceEnhancement(audioData: any, type: string): Promise<any> {
     DEBUG.log.info(`🎤 Applying ${type} enhancement`);
     
-    const enhancements = {
+    const enhancements: { [key: string]: any } = {
       'autotune': { pitch: 'corrected', naturalness: 0.8 },
       'harmonizer': { harmonies: 3, blend: 0.7 },
       'reverb': { room: 'concert_hall', wetness: 0.4 },

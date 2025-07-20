@@ -78,16 +78,16 @@ export interface KaratokenCoreState {
  */
 export class KaratokenCore extends EventEmitter {
   private static instance: KaratokenCore;
-  private state: KaratokenCoreState;
+  private state!: KaratokenCoreState;
   
   // Core Engines
-  private aiEngine: AIEngine;
-  private audioEngine: AudioEngine;
-  private cryptoEngine: CryptoEngine;
-  private socialEngine: SocialEngine;
-  private performanceEngine: PerformanceEngine;
-  private contentEngine: ContentEngine;
-  private agenticAIEngine: AgenticAIEngine;
+  private aiEngine!: AIEngine;
+  private audioEngine!: AudioEngine;
+  private cryptoEngine!: CryptoEngine;
+  private socialEngine!: SocialEngine;
+  private performanceEngine!: PerformanceEngine;
+  private contentEngine!: ContentEngine;
+  private agenticAIEngine!: AgenticAIEngine;
   
   private isInitialized = false;
   
@@ -178,9 +178,18 @@ export class KaratokenCore extends EventEmitter {
       const rewardPotential = await this.cryptoEngine.calculateRewardPotential(params);
       
       // 5. 🎯 Create session
+      const sessionSong: Song = {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        genre: song.genre,
+        audioUrl: song.audioUrl || 'https://example.com/placeholder.mp3',
+        lyrics: [] // Add empty lyrics array to match interface
+      };
+
       const session: KaraokeSession = {
         id: this.generateSessionId(),
-        song,
+        song: sessionSong,
         user: this.state.user,
         startTime: Date.now(),
         mode: params.mode,
@@ -191,10 +200,19 @@ export class KaratokenCore extends EventEmitter {
       };
       
       // Update state
+      const songWithLyrics: Song = {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        genre: song.genre,
+        audioUrl: song.audioUrl || 'https://example.com/placeholder.mp3',
+        lyrics: [] // Add empty lyrics array to match interface
+      };
+
       this.updateState({
         audio: {
           ...this.state.audio,
-          currentSong: song,
+          currentSong: songWithLyrics,
         }
       });
       
@@ -257,7 +275,8 @@ export class KaratokenCore extends EventEmitter {
     
     try {
       // 1. ⚔️ Join battle
-      const battle = await this.socialEngine.joinBattle(battleId);
+      const user = this.state.user || { username: 'Anonymous', id: 'guest' };
+      const battle = await this.socialEngine.joinBattle(battleId, user);
       
       // 2. 🎤 Prepare real-time audio
       await this.audioEngine.enableRealTimeMode();
