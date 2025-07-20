@@ -93,7 +93,7 @@
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "openai": "^4.68.0",
-    "react-native-tensorflow-lite": "^0.2.0",
+    "react-native-tensorflow-lite": "^1.0.6",
     "react-native-audio-toolkit": "^2.0.3",
     "react-native-sound": "^0.11.2",
     "react-native-track-player": "^4.0.1",
