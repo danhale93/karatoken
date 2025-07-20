@@ -193,7 +193,7 @@ export default function HomeScreen() {
               <MaterialIcons name="emoji-events" size={40} color="#FFFFFF" />
               <Text style={styles.challengeTitle}>Daily Challenge</Text>
               <Text style={styles.challengeDescription}>
-                Sing "Bohemian Rhapsody" and earn 100 KRT!
+                Sing &quot;Bohemian Rhapsody&quot; and earn 100 KRT!
               </Text>
               <TouchableOpacity style={styles.challengeButton}>
                 <Text style={styles.challengeButtonText}>Accept Challenge</Text>
