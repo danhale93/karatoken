@@ -9,6 +9,7 @@ interface WalletState {
   getTransactions: (userId: string) => Promise<void>;
   purchaseTokens: (userId: string, amount: number) => Promise<void>;
   requestPayout: (userId: string, amount: number, method: 'crypto' | 'paypal') => Promise<void>;
+  addTokens: (amount: number) => void;
 }
 
 export const useWalletStore = create<WalletState>((set, get) => ({
@@ -51,5 +52,10 @@ export const useWalletStore = create<WalletState>((set, get) => ({
     } catch (error) {
       throw error;
     }
+  },
+
+  addTokens: (amount: number) => {
+    const { balance } = get();
+    set({ balance: { ...balance, krt: balance.krt + amount } });
   },
 }));

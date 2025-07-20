@@ -36,20 +36,29 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="leaderboard"
+        name="song-selection"
         options={{
-          title: 'Leaderboard',
+          title: 'Songs',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="leaderboard" size={size} color={color} />
+            <MaterialIcons name="music-note" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="battle"
+        name="competitions"
         options={{
-          title: 'Battle',
+          title: 'Challenges',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="flash-on" size={size} color={color} />
+            <MaterialIcons name="emoji-events" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="trending"
+        options={{
+          title: 'Trending',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="trending-up" size={size} color={color} />
           ),
         }}
       />
@@ -59,15 +68,6 @@ export default function TabLayout() {
           title: 'Wallet',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="account-balance-wallet" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={size} color={color} />
           ),
         }}
       />

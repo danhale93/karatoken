@@ -1,75 +1,247 @@
-# Welcome to OnSpace AI
+# Karatoken: The Future of Karaoke 🎤
 
-Onspace AI empowers anyone to turn ideas into powerful AI applications in minutes—no coding required. Our free, no-code platform enables effortless creation of custom AI apps; simply describe your vision and our agentic AI handles the rest. The onspace-app, built with React Native and Expo, demonstrates this capability—integrating popular third-party libraries to deliver seamless cross-platform performance across iOS, Android, and Web environments.
+Karatoken is an innovative karaoke platform blending the thrill of competitive singing with cutting-edge AI, cryptocurrency rewards, and global connectivity. Built on React Native and Expo, Karatoken transforms the karaoke experience into a dynamic entertainment and earning ecosystem.
 
-## Getting Started
+## 🚀 Core Features
 
-### 1. Install Dependencies
+### 🎤 AI-Powered Karaoke Engine
+- Real-time pitch detection and vocal scoring
+- Accurate note tracking inspired by Ultrastar Play
+- Supports solo, duet, and battle modes
+- AI-powered performance analysis and feedback
 
+### 🧠 AI Studio
+- Compose original songs with AI assistance
+- Modify pitch, lyrics, tempo, and genre in real time
+- Train the AI on your vocal style and songwriting preferences
+- Genre swapping technology
+
+### 🎭 Genre Swapping
+- Instantly reimagine songs in different musical genres
+- AI dynamically adjusts backing tracks and vocal stylings
+- Support for EDM, country, lo-fi, trap, jazz, and more
+
+### 🌍 Global Competitions
+- Daily, weekly, and monthly singing tournaments
+- Real-time scoring and crowd voting
+- Rewards in $KARA (Karatoken's crypto)
+- Entry fees and prize pools
+
+### 💰 Earn-as-You-Sing Model
+- Win crypto or PayPal rewards
+- Streak bonuses, performance-based earnings
+- Battle victories and competition prizes
+
+### 🔥 Trending & Viral Content
+- Auto-generated trending reels based on top-scored moments
+- AI-curated clips for social sharing
+- Viral content discovery and sharing
+
+### 🎁 Daily Rewards & Mystery Bonuses
+- Login streak bonuses with multipliers
+- Scratch cards, spin-the-wheel, and unlockable vaults
+- Mystery boxes and surprise rewards
+
+### 🧑‍🤝‍🧑 Social & Community
+- Public chat rooms by genre, country, or event
+- In-app reactions, duets, remixes, and collaborations
+- Creator tipping and gift system
+
+## 📱 Navigation Structure
+
+The app features a clean bottom dashboard with quick access to:
+
+- **Home** - Main dashboard and featured content
+- **Songs** - Song selection and library
+- **Challenges** - Global competitions and tournaments
+- **Trending** - Viral content and trending clips
+- **Wallet** - Crypto wallet and transactions
+
+## 🛠 Technology Stack
+
+- **Frontend**: React Native with Expo
+- **Backend**: Firebase, Node.js, WebRTC
+- **AI/ML**: OpenAI, TensorFlow Lite
+- **Blockchain**: Polygon or Solana-based Karatoken ($KARA)
+- **State Management**: Zustand
+- **Navigation**: Expo Router
+- **UI Components**: React Native Paper, NativeWind
+
+## 🎯 Key Differentiators
+
+| Feature | Karatoken | Smule | Yokee | StarMaker | Ultrastar |
+|---------|-----------|-------|-------|-----------|-----------|
+| AI Features | ✅✅✅ | ❌ | ❌ | ❌ | ✅ (basic) |
+| Crypto Rewards | ✅✅✅ | ❌ | ❌ | ❌ | ❌ |
+| Global Competitions | ✅✅✅ | ❌ | ❌ | ❌ | ❌ |
+| AI Studio | ✅✅✅ | ❌ | ❌ | ❌ | ❌ |
+| Genre Swapping | ✅✅✅ | ❌ | ❌ | ❌ | ❌ |
+| Social Features | ✅✅✅ | ✅✅✅ | ✅✅ | ✅✅✅ | ❌ |
+
+## 💎 Business Model
+
+- **Freemium app** with optional VIP tier
+- **In-app purchases**: avatar items, genre unlocks, studio credits
+- **Crypto staking** and rewards
+- **Sponsored competitions** & brand challenges
+- **Creator marketplace** for original content
+
+## 🗺 Roadmap
+
+### Q3 2025
+- ✅ MVP build (React Native + Expo)
+- ✅ Core singing engine & scoring logic
+- ✅ Basic UI and wallet integration
+- ✅ AI Studio foundation
+
+### Q4 2025
+- 🔄 AI Studio launch
+- 🔄 Beta testing for Genre Swapping & Studio
+- 🔄 Creator profile tools
+- 🔄 Global tournament system
+
+### Q1 2026
+- 📋 Mobile & desktop deployment
+- 📋 Full crypto wallet support
+- 📋 Advanced AI features
+- 📋 Social features expansion
+
+### Q2 2026
+- 📋 Monetization scaling
+- 📋 Partnerships with music labels & crypto brands
+- 📋 Creator NFT marketplace
+- 📋 Global expansion
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Expo CLI
+- iOS Simulator or Android Emulator
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd karatoken-app
+```
+
+2. **Install dependencies**
 ```bash
 npm install
 # or
 yarn install
 ```
 
-### 2. Start the Project
-
-- Start the development server (choose your platform):
-
+3. **Start the development server**
 ```bash
-npm run start         # Start Expo development server
-npm run android       # Launch Android emulator
-npm run ios           # Launch iOS simulator
-npm run web           # Start the web version
+npm start
+# or
+yarn start
 ```
 
-- Reset the project (clear cache, etc.):
-
+4. **Run on your preferred platform**
 ```bash
-npm run reset-project
+# iOS
+npm run ios
+
+# Android
+npm run android
+
+# Web
+npm run web
 ```
 
-### 3. Lint the Code
+### Environment Setup
 
-```bash
-npm run lint
+Create a `.env` file in the root directory:
+```env
+EXPO_PUBLIC_API_URL=your_api_url
+EXPO_PUBLIC_FIREBASE_CONFIG=your_firebase_config
+EXPO_PUBLIC_OPENAI_API_KEY=your_openai_key
 ```
 
-## Main Dependencies
+## 🎵 Features in Detail
 
-- React Native: 0.79.4
-- React: 19.0.0
-- Expo: ~53.0.12
-- Expo Router: ~5.1.0
-- Supabase: ^2.50.0
-- Other commonly used libraries:  
-  - @expo/vector-icons  
-  - react-native-paper  
-  - react-native-calendars  
-  - lottie-react-native  
-  - react-native-webview  
-  - and more
+### AI Studio
+The AI Studio allows users to:
+- Create original songs with AI assistance
+- Modify existing songs with real-time genre swapping
+- Train AI models on personal vocal style
+- Generate backing tracks and arrangements
 
-For a full list of dependencies, see [package.json](./package.json).
+### Global Competitions
+- **Daily Challenges**: Quick competitions with small prize pools
+- **Weekly Tournaments**: Larger competitions with significant rewards
+- **Monthly Championships**: Major events with industry judges
+- **Real-time Voting**: Community voting on performances
+- **Prize Distribution**: Automatic crypto rewards
 
-## Development Tools
+### Trending Content
+- **AI Curation**: Automatic selection of viral moments
+- **Category Filtering**: Top scores, funny moments, AI-generated content
+- **Social Sharing**: One-tap sharing to social media
+- **Engagement Metrics**: Views, likes, shares tracking
 
-- TypeScript: ~5.8.3
-- ESLint: ^9.25.0
-- @babel/core: ^7.25.2
+### Rewards System
+- **Daily Login**: Consistent daily rewards
+- **Streak Bonuses**: Multipliers for consecutive logins
+- **Performance Rewards**: Tokens for high scores
+- **Competition Winnings**: Prize pool distributions
+- **Mystery Rewards**: Surprise bonuses and vaults
 
-## Contributing
+## 🔧 Development
 
-1. Fork this repository
-2. Create a new branch (`git checkout -b main`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
+### Project Structure
+```
+app/
+├── (tabs)/           # Main tab navigation
+│   ├── index.tsx     # Home screen
+│   ├── song-selection.tsx
+│   ├── competitions.tsx
+│   ├── trending.tsx
+│   └── wallet.tsx
+├── (auth)/           # Authentication screens
+├── karaoke/          # Karaoke performance screens
+├── ai-studio.tsx     # AI Studio feature
+└── rewards.tsx       # Rewards and bonuses
+```
 
-## License
+### Key Services
+- `karaokeService.ts` - Core karaoke functionality
+- `walletService.ts` - Crypto wallet operations
+- `battleService.ts` - Competition and battle logic
+- `performanceService.ts` - AI scoring and analysis
+
+### State Management
+- `useKaraokeStore` - Karaoke session management
+- `useWalletStore` - Crypto wallet state
+- `useAuthStore` - User authentication
+- `usePerformanceStore` - Performance tracking
+
+## 🎯 Investment Opportunity
+
+We're seeking strategic partners to:
+- Accelerate development of AI studio and blockchain integration
+- Expand our global music licensing catalog
+- Grow user acquisition and partnerships
+
+**Current Ask**: AUD $400,000 for 15% equity
+**Use of Funds**: Dev team, licensing, marketing, cloud infrastructure
+
+## 📞 Contact
+
+**Dan Hale**  
+Founder & CEO, Karatoken  
+www.karatoken.io  
+contact@karatoken.io
+
+## 📄 License
 
 This project is private ("private": true). For collaboration inquiries, please contact the author.
 
 ---
 
-Feel free to add project screenshots, API documentation, feature descriptions, or any other information as needed.
+*Karatoken isn't just a karaoke app — it's a music metaverse. With deep AI tools, competitive earning mechanics, and powerful creator incentives, we're turning every phone into a stage and every singer into a potential star.*
