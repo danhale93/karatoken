@@ -1,336 +1,266 @@
 // Powered by OnSpace.AI
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  FlatList,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAuthStore } from '../../hooks/useAuthStore';
-import { usePerformanceStore } from '../../hooks/usePerformanceStore';
-import { useBattleStore } from '../../hooks/useBattleStore';
 
-const { width } = Dimensions.get('window');
+// Mock mobile versions of our engines
+class MobileKaratokenCore {
+  private sessions: Map<string, any> = new Map();
 
-export default function HomeScreen() {
-  const { user } = useAuthStore();
-  const { getRecentPerformances } = usePerformanceStore();
-  const { getActiveBattles } = useBattleStore();
-  const [recentPerformances, setRecentPerformances] = useState([]);
-  const [activeBattles, setActiveBattles] = useState([]);
-
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
-
-  const loadData = async () => {
-    try {
-      const performances = await getRecentPerformances(user.id);
-      const battles = await getActiveBattles();
-      setRecentPerformances(performances);
-      setActiveBattles(battles);
-    } catch (error) {
-      console.error('Error loading home data:', error);
-    }
-  };
-
-  const navigateToSongSelection = () => {
-    router.push('/song-selection');
-  };
-
-  const navigateToBattle = () => {
-    router.push('/(tabs)/battle');
-  };
-
-  const renderPerformanceCard = ({ item }) => (
-    <TouchableOpacity style={styles.performanceCard}>
-      <Image 
-        source={{ uri: item.thumbnailUrl || 'https://picsum.photos/seed/music/120/120.webp' }}
-        style={styles.performanceThumbnail}
-      />
-      <View style={styles.performanceInfo}>
-        <Text style={styles.songTitle}>{item.songTitle}</Text>
-        <Text style={styles.artistName}>{item.artistName}</Text>
-        <View style={styles.scoreContainer}>
-          <MaterialIcons name="star" size={16} color="#F59E0B" />
-          <Text style={styles.scoreText}>{item.score}%</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderBattleCard = ({ item }) => (
-    <TouchableOpacity style={styles.battleCard}>
-      <View style={styles.battleHeader}>
-        <MaterialIcons name="flash-on" size={20} color="#10B981" />
-        <Text style={styles.battleTitle}>Live Battle</Text>
-        <Text style={styles.battleStatus}>ACTIVE</Text>
-      </View>
-      <Text style={styles.battleSong}>{item.songTitle}</Text>
-      <View style={styles.battleParticipants}>
-        <Text style={styles.participantCount}>{item.participantCount} singers</Text>
-        <Text style={styles.battleReward}>🏆 {item.reward} KRT</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  if (!user) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.authPrompt}>
-          <MaterialIcons name="mic" size={80} color="#6B46C1" />
-          <Text style={styles.authTitle}>Welcome to Karatoken</Text>
-          <Text style={styles.authSubtitle}>
-            The Future of Karaoke - Sing, Compete, Earn $KARA
-          </Text>
-          <View style={styles.featuresPreview}>
-            <View style={styles.previewFeature}>
-              <MaterialIcons name="auto-awesome" size={24} color="#8B5CF6" />
-              <Text style={styles.previewText}>AI Studio</Text>
-            </View>
-            <View style={styles.previewFeature}>
-              <MaterialIcons name="paid" size={24} color="#F59E0B" />
-              <Text style={styles.previewText}>Earn Crypto</Text>
-            </View>
-            <View style={styles.previewFeature}>
-              <MaterialIcons name="emoji-events" size={24} color="#10B981" />
-              <Text style={styles.previewText}>Compete</Text>
-            </View>
-          </View>
-          <TouchableOpacity 
-            style={styles.authButton}
-            onPress={() => router.push('/(auth)/sign-in')}
-          >
-            <Text style={styles.authButtonText}>Start Your Journey</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
+  async startSession(songTitle: string) {
+    const session = {
+      id: `session_${Date.now()}`,
+      song: songTitle,
+      score: 0,
+      status: 'active'
+    };
+    this.sessions.set(session.id, session);
+    return session;
   }
+
+  async simulateScoring(sessionId: string) {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.score = Math.floor(Math.random() * 30) + 70; // 70-100
+      return session.score;
+    }
+    return 0;
+  }
+}
+
+class MobileInstrumentEngine {
+  instruments = ['guitar', 'drums', 'piano', 'bass', 'violin', 'flute'];
+
+  async detectInstrument() {
+    const detected = this.instruments[Math.floor(Math.random() * this.instruments.length)];
+    const confidence = (85 + Math.random() * 15).toFixed(1);
+    return { instrument: detected, confidence };
+  }
+
+  async scorePerformance(instrument: string) {
+    return {
+      accuracy: (70 + Math.random() * 30).toFixed(1),
+      timing: (75 + Math.random() * 25).toFixed(1),
+      technique: (65 + Math.random() * 35).toFixed(1),
+      creativity: (80 + Math.random() * 20).toFixed(1)
+    };
+  }
+}
+
+class MobileTalentMarketplace {
+  async registerTalent(name: string) {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    return {
+      id: `talent_${Date.now()}`,
+      name,
+      skills: ['Vocals', 'Guitar'],
+      rating: 0,
+      earnings: 0
+    };
+  }
+
+  async aiAnalyzeAudition() {
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    return {
+      technical: (70 + Math.random() * 30).toFixed(1),
+      creativity: (75 + Math.random() * 25).toFixed(1),
+      fit: (80 + Math.random() * 20).toFixed(1)
+    };
+  }
+}
+
+export default function KaratokenMobileDemo() {
+  const [currentDemo, setCurrentDemo] = useState<string>('welcome');
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<any>({});
+
+  const karatokenCore = new MobileKaratokenCore();
+  const instrumentEngine = new MobileInstrumentEngine();
+  const talentMarketplace = new MobileTalentMarketplace();
+
+  const runKaraokeDemo = async () => {
+    setCurrentDemo('karaoke');
+    setLoading(true);
+    
+    try {
+      const session = await karatokenCore.startSession('Bohemian Rhapsody');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const score = await karatokenCore.simulateScoring(session.id);
+      
+      setResults({
+        sessionId: session.id,
+        song: session.song,
+        score
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to start karaoke session');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runInstrumentDemo = async () => {
+    setCurrentDemo('instrument');
+    setLoading(true);
+    
+    try {
+      const detection = await instrumentEngine.detectInstrument();
+      const scores = await instrumentEngine.scorePerformance(detection.instrument);
+      
+      setResults({
+        detected: detection,
+        scores
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to detect instrument');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runTalentDemo = async () => {
+    setCurrentDemo('talent');
+    setLoading(true);
+    
+    try {
+      const talent = await talentMarketplace.registerTalent('Alex Rivera');
+      const analysis = await talentMarketplace.aiAnalyzeAudition();
+      
+      setResults({
+        talent,
+        analysis
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to register talent');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderWelcome = () => (
+    <View style={styles.section}>
+      <Text style={styles.title}>🎵 Karatoken</Text>
+      <Text style={styles.subtitle}>Ultimate Music Universe</Text>
+      <Text style={styles.description}>
+        The complete music industry revolution in your pocket!
+      </Text>
+      
+      <View style={styles.featureList}>
+        <Text style={styles.feature}>🎤 AI-powered karaoke</Text>
+        <Text style={styles.feature}>🎸 Multi-instrument support</Text>
+        <Text style={styles.feature}>🎭 Talent marketplace</Text>
+        <Text style={styles.feature}>🇪🇺 Eurovision integration</Text>
+        <Text style={styles.feature}>🤖 Agentic AI features</Text>
+        <Text style={styles.feature}>🌍 Cultural genre swapping</Text>
+      </View>
+    </View>
+  );
+
+  const renderKaraokeResults = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>🎤 Karaoke Session</Text>
+      {loading ? (
+        <Text style={styles.loading}>🎵 Starting karaoke session...</Text>
+      ) : (
+        <View>
+          <Text style={styles.result}>Song: {results.song}</Text>
+          <Text style={styles.result}>Session ID: {results.sessionId}</Text>
+          <Text style={[styles.result, styles.score]}>
+            🏆 Score: {results.score}/100
+          </Text>
+          {results.score >= 90 && (
+            <Text style={styles.achievement}>🌟 Excellent Performance!</Text>
+          )}
+        </View>
+      )}
+    </View>
+  );
+
+  const renderInstrumentResults = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>🎸 Instrument Detection</Text>
+      {loading ? (
+        <Text style={styles.loading}>🎵 Detecting instrument...</Text>
+      ) : (
+        <View>
+          <Text style={styles.result}>
+            Detected: {results.detected?.instrument} 
+            ({results.detected?.confidence}% confidence)
+          </Text>
+          <Text style={styles.subTitle}>Performance Scores:</Text>
+          <Text style={styles.score}>📈 Accuracy: {results.scores?.accuracy}%</Text>
+          <Text style={styles.score}>⏱️ Timing: {results.scores?.timing}%</Text>
+          <Text style={styles.score}>🎯 Technique: {results.scores?.technique}%</Text>
+          <Text style={styles.score}>✨ Creativity: {results.scores?.creativity}%</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderTalentResults = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>🎭 Talent Marketplace</Text>
+      {loading ? (
+        <Text style={styles.loading}>🎭 Processing talent registration...</Text>
+      ) : (
+        <View>
+          <Text style={styles.result}>Talent: {results.talent?.name}</Text>
+          <Text style={styles.result}>Skills: {results.talent?.skills?.join(', ')}</Text>
+          <Text style={styles.subTitle}>AI Audition Analysis:</Text>
+          <Text style={styles.score}>🎯 Technical: {results.analysis?.technical}/100</Text>
+          <Text style={styles.score}>✨ Creativity: {results.analysis?.creativity}/100</Text>
+          <Text style={styles.score}>💫 Job Fit: {results.analysis?.fit}/100</Text>
+        </View>
+      )}
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hello, {user.displayName}!</Text>
-            <Text style={styles.subtitle}>Ready to rock the stage?</Text>
-          </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <MaterialIcons name="notifications" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {currentDemo === 'welcome' && renderWelcome()}
+        {currentDemo === 'karaoke' && renderKaraokeResults()}
+        {currentDemo === 'instrument' && renderInstrumentResults()}
+        {currentDemo === 'talent' && renderTalentResults()}
+        
+        <View style={styles.buttonContainer}>
           <TouchableOpacity 
-            style={styles.primaryAction}
-            onPress={navigateToSongSelection}
+            style={[styles.button, styles.karaokeButton]} 
+            onPress={runKaraokeDemo}
+            disabled={loading}
           >
-            <LinearGradient
-              colors={['#6B46C1', '#8B5CF6']}
-              style={styles.actionGradient}
-            >
-              <MaterialIcons name="mic" size={32} color="#FFFFFF" />
-              <Text style={styles.actionTitle}>Start Singing</Text>
-              <Text style={styles.actionSubtitle}>Choose a song</Text>
-            </LinearGradient>
+            <Text style={styles.buttonText}>🎤 Test Karaoke</Text>
           </TouchableOpacity>
-
+          
           <TouchableOpacity 
-            style={styles.secondaryAction}
-            onPress={navigateToBattle}
+            style={[styles.button, styles.instrumentButton]} 
+            onPress={runInstrumentDemo}
+            disabled={loading}
           >
-            <LinearGradient
-              colors={['#10B981', '#059669']}
-              style={styles.actionGradient}
-            >
-              <MaterialIcons name="flash-on" size={32} color="#FFFFFF" />
-              <Text style={styles.actionTitle}>Quick Battle</Text>
-              <Text style={styles.actionSubtitle}>Compete now</Text>
-            </LinearGradient>
+            <Text style={styles.buttonText}>🎸 Test Instruments</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.button, styles.talentButton]} 
+            onPress={runTalentDemo}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>🎭 Test Marketplace</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.button, styles.resetButton]} 
+            onPress={() => setCurrentDemo('welcome')}
+          >
+            <Text style={styles.buttonText}>🏠 Home</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Active Battles */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Live Battles</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/battle')}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={activeBattles}
-            renderItem={renderBattleCard}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          />
-        </View>
-
-        {/* Recent Performances */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Your Recent Performances</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={recentPerformances}
-            renderItem={renderPerformanceCard}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          />
-        </View>
-
-        {/* Trending & Viral Content */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🔥 Trending Now</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={[
-              {
-                id: '1',
-                title: 'Viral Duet Challenge',
-                singer: '@karastar_jenny',
-                views: '1.2M',
-                song: 'Perfect Duet',
-                thumbnail: 'https://picsum.photos/seed/viral1/120/120.webp'
-              },
-              {
-                id: '2',
-                title: 'AI Genre Swap Magic',
-                singer: '@ai_vocalist',
-                views: '850K',
-                song: 'Pop → Jazz Transform',
-                thumbnail: 'https://picsum.photos/seed/viral2/120/120.webp'
-              }
-            ]}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.trendingCard}>
-                <Image source={{ uri: item.thumbnail }} style={styles.trendingThumbnail} />
-                <View style={styles.trendingInfo}>
-                  <Text style={styles.trendingTitle}>{item.title}</Text>
-                  <Text style={styles.trendingSinger}>{item.singer}</Text>
-                  <Text style={styles.trendingSong}>{item.song}</Text>
-                  <View style={styles.trendingStats}>
-                    <MaterialIcons name="play-arrow" size={16} color="#10B981" />
-                    <Text style={styles.trendingViews}>{item.views} views</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            )}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          />
-        </View>
-
-        {/* AI Studio Spotlight */}
-        <View style={styles.section}>
-          <LinearGradient
-            colors={['#8B5CF6', '#A855F7']}
-            style={styles.aiSpotlightCard}
-          >
-            <View style={styles.aiSpotlightContent}>
-              <MaterialIcons name="auto-awesome" size={40} color="#FFFFFF" />
-              <View style={styles.aiSpotlightText}>
-                <Text style={styles.aiSpotlightTitle}>AI Studio Available</Text>
-                <Text style={styles.aiSpotlightDescription}>
-                  Create original songs with AI assistance
-                </Text>
-              </View>
-              <TouchableOpacity 
-                style={styles.aiSpotlightButton}
-                onPress={() => router.push('/(tabs)/studio')}
-              >
-                <Text style={styles.aiSpotlightButtonText}>Try Now</Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* Featured Creators */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>👑 Featured Creators</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={[
-              {
-                id: '1',
-                name: 'VocalQueen_Sarah',
-                earnings: '2,450',
-                badge: '👑',
-                avatar: 'https://picsum.photos/seed/creator1/60/60.webp'
-              },
-              {
-                id: '2',
-                name: 'AI_Composer_Mike',
-                earnings: '1,980',
-                badge: '🤖',
-                avatar: 'https://picsum.photos/seed/creator2/60/60.webp'
-              }
-            ]}
-            renderItem={({ item }) => (
-              <View style={styles.creatorCard}>
-                <Image source={{ uri: item.avatar }} style={styles.creatorAvatar} />
-                <Text style={styles.creatorBadge}>{item.badge}</Text>
-                <Text style={styles.creatorName}>{item.name}</Text>
-                <Text style={styles.creatorEarnings}>{item.earnings} KARA</Text>
-              </View>
-            )}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          />
-        </View>
-
-        {/* Daily Challenge */}
-        <View style={styles.challengeSection}>
-          <LinearGradient
-            colors={['#F59E0B', '#D97706']}
-            style={styles.challengeCard}
-          >
-            <View style={styles.challengeContent}>
-              <MaterialIcons name="emoji-events" size={40} color="#FFFFFF" />
-              <Text style={styles.challengeTitle}>Daily Challenge</Text>
-              <Text style={styles.challengeDescription}>
-                Sing "Bohemian Rhapsody" and earn 100 KARA!
-              </Text>
-              <TouchableOpacity 
-                style={styles.challengeButton}
-                onPress={() => router.push('/(tabs)/challenges')}
-              >
-                <Text style={styles.challengeButtonText}>Accept Challenge</Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>🚀 Karatoken - Revolutionizing Music</Text>
+          <Text style={styles.footerSubtext}>
+            From karaoke to talent discovery, all in one app!
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -340,244 +270,124 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#0a0a0a',
   },
-  authPrompt: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  scrollContent: {
+    flexGrow: 1,
     padding: 20,
-  },
-  authTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  authSubtitle: {
-    fontSize: 16,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  authButton: {
-    backgroundColor: '#6B46C1',
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 25,
-  },
-  authButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 10,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#9CA3AF',
-    marginTop: 5,
-  },
-  notificationButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#374151',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quickActions: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 30,
-    gap: 15,
-  },
-  primaryAction: {
-    flex: 1,
-    height: 120,
-    borderRadius: 15,
-    overflow: 'hidden',
-  },
-  secondaryAction: {
-    flex: 1,
-    height: 120,
-    borderRadius: 15,
-    overflow: 'hidden',
-  },
-  actionGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  actionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: 10,
-  },
-  actionSubtitle: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    opacity: 0.8,
-    marginTop: 5,
   },
   section: {
     marginBottom: 30,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 15,
+  title: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  description: {
+    fontSize: 16,
+    color: '#ccc',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#ffffff',
+    marginBottom: 15,
+    textAlign: 'center',
   },
-  seeAllText: {
+  subTitle: {
     fontSize: 16,
-    color: '#10B981',
     fontWeight: '600',
+    color: '#fff',
+    marginTop: 10,
+    marginBottom: 5,
   },
-  horizontalList: {
-    paddingLeft: 20,
+  featureList: {
+    marginBottom: 20,
   },
-  performanceCard: {
-    width: 160,
-    backgroundColor: '#1F2937',
-    borderRadius: 12,
-    padding: 12,
-    marginRight: 15,
-  },
-  performanceThumbnail: {
-    width: '100%',
-    height: 90,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  performanceInfo: {
-    flex: 1,
-  },
-  songTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  artistName: {
-    fontSize: 12,
-    color: '#9CA3AF',
+  feature: {
+    fontSize: 16,
+    color: '#4CAF50',
     marginBottom: 8,
+    textAlign: 'center',
   },
-  scoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  result: {
+    fontSize: 16,
+    color: '#ffffff',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  scoreText: {
+  score: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#F59E0B',
-    marginLeft: 4,
+    color: '#4CAF50',
+    marginBottom: 5,
+    textAlign: 'center',
   },
-  battleCard: {
-    width: 200,
-    backgroundColor: '#1F2937',
-    borderRadius: 12,
-    padding: 15,
-    marginRight: 15,
-    borderWidth: 1,
-    borderColor: '#10B981',
-  },
-  battleHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  battleTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginLeft: 8,
-    flex: 1,
-  },
-  battleStatus: {
-    fontSize: 10,
+  achievement: {
+    fontSize: 18,
+    color: '#FFD700',
     fontWeight: 'bold',
-    color: '#10B981',
-    backgroundColor: '#065F46',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    textAlign: 'center',
+    marginTop: 10,
   },
-  battleSong: {
+  loading: {
+    fontSize: 16,
+    color: '#FFA500',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  buttonContainer: {
+    marginTop: 20,
+    gap: 15,
+  },
+  button: {
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  karaokeButton: {
+    backgroundColor: '#FF6B35',
+  },
+  instrumentButton: {
+    backgroundColor: '#4ECDC4',
+  },
+  talentButton: {
+    backgroundColor: '#45B7D1',
+  },
+  resetButton: {
+    backgroundColor: '#666',
+  },
+  buttonText: {
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
   },
-  battleParticipants: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  participantCount: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  battleReward: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#F59E0B',
-  },
-  challengeSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  challengeCard: {
-    borderRadius: 15,
-    overflow: 'hidden',
-  },
-  challengeContent: {
+  footer: {
+    marginTop: 40,
     padding: 20,
     alignItems: 'center',
   },
-  challengeTitle: {
-    fontSize: 20,
+  footerText: {
+    color: '#4CAF50',
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: 10,
-  },
-  challengeDescription: {
-    fontSize: 14,
-    color: '#FFFFFF',
     textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 15,
-    opacity: 0.9,
   },
-  challengeButton: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  challengeButtonText: {
-    color: '#F59E0B',
+  footerSubtext: {
+    color: '#888',
     fontSize: 14,
-    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 5,
   },
 });
