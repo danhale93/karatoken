@@ -86,7 +86,7 @@ export default function SongSelectionScreen() {
     }
   };
 
-  const renderSongCard = ({ item }) => (
+  const renderSongCard = ({ item }: { item: any }) => (
     <TouchableOpacity 
       style={styles.songCard}
       onPress={() => handleSelectSong(item)}

@@ -33,8 +33,10 @@ export default function WalletScreen() {
 
   const loadWalletData = async () => {
     try {
-      await getBalance(user.id);
-      await getTransactions(user.id);
+      if (user) {
+        await getBalance(user.id);
+        await getTransactions(user.id);
+      }
     } catch (error) {
       console.error('Error loading wallet data:', error);
     }
@@ -42,7 +44,9 @@ export default function WalletScreen() {
 
   const handlePurchaseTokens = async (amount: number) => {
     try {
-      await purchaseTokens(user.id, amount);
+      if (user) {
+        await purchaseTokens(user.id, amount);
+      }
       Alert.alert('Success', `Successfully purchased ${amount} KRT tokens!`);
     } catch (error) {
       Alert.alert('Error', 'Failed to purchase tokens');
@@ -56,14 +60,16 @@ export default function WalletScreen() {
     }
 
     try {
-      await requestPayout(user.id, balance.krt, 'crypto');
+      if (user) {
+        await requestPayout(user.id, balance.krt, 'crypto');
+      }
       Alert.alert('Success', 'Payout request submitted successfully!');
     } catch (error) {
       Alert.alert('Error', 'Failed to request payout');
     }
   };
 
-  const renderTransaction = (transaction, index) => {
+  const renderTransaction = (transaction: any, index: number) => {
     const isPositive = transaction.amount > 0;
     const icon = isPositive ? 'add-circle' : 'remove-circle';
     const color = isPositive ? '#10B981' : '#EF4444';

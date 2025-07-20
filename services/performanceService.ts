@@ -165,6 +165,35 @@ class PerformanceService {
     }
   }
 
+  async getPerformanceById(performanceId: string): Promise<Performance> {
+    try {
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/performances/${performanceId}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch performance');
+      }
+
+      const performance = await response.json();
+      return performance;
+    } catch (error) {
+      // Mock implementation for demo
+      return {
+        id: performanceId,
+        userId: 'demo-user-1',
+        songId: 'song-1',
+        songTitle: 'Bohemian Rhapsody',
+        artistName: 'Queen',
+        videoUrl: 'mock-video-url',
+        thumbnailUrl: 'https://picsum.photos/seed/queen/300/200.webp',
+        score: 92,
+        duration: 355,
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        status: 'completed',
+      };
+    }
+  }
+
   async deletePerformance(performanceId: string): Promise<void> {
     try {
       // TODO: Replace with actual API call

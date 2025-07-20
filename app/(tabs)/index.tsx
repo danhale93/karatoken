@@ -17,6 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import { usePerformanceStore } from '../../hooks/usePerformanceStore';
 import { useBattleStore } from '../../hooks/useBattleStore';
+import { Performance } from '../../services/performanceService';
+import { Battle } from '../../services/battleService';
 
 const { width } = Dimensions.get('window');
 
@@ -24,8 +26,8 @@ export default function HomeScreen() {
   const { user } = useAuthStore();
   const { getRecentPerformances } = usePerformanceStore();
   const { getActiveBattles } = useBattleStore();
-  const [recentPerformances, setRecentPerformances] = useState([]);
-  const [activeBattles, setActiveBattles] = useState([]);
+  const [recentPerformances, setRecentPerformances] = useState<Performance[]>([]);
+  const [activeBattles, setActiveBattles] = useState<Battle[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -35,10 +37,12 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     try {
-      const performances = await getRecentPerformances(user.id);
-      const battles = await getActiveBattles();
-      setRecentPerformances(performances);
-      setActiveBattles(battles);
+      if (user) {
+        const performances = await getRecentPerformances(user.id);
+        const battles = await getActiveBattles();
+        setRecentPerformances(performances);
+        setActiveBattles(battles);
+      }
     } catch (error) {
       console.error('Error loading home data:', error);
     }
@@ -52,7 +56,7 @@ export default function HomeScreen() {
     router.push('/(tabs)/battle');
   };
 
-  const renderPerformanceCard = ({ item }) => (
+  const renderPerformanceCard = ({ item }: { item: Performance }) => (
     <TouchableOpacity style={styles.performanceCard}>
       <Image 
         source={{ uri: item.thumbnailUrl || 'https://picsum.photos/seed/music/120/120.webp' }}
@@ -69,7 +73,7 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const renderBattleCard = ({ item }) => (
+  const renderBattleCard = ({ item }: { item: Battle }) => (
     <TouchableOpacity style={styles.battleCard}>
       <View style={styles.battleHeader}>
         <MaterialIcons name="flash-on" size={20} color="#10B981" />

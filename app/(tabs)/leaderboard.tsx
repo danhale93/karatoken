@@ -13,13 +13,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLeaderboardStore } from '../../hooks/useLeaderboardStore';
+import { LeaderboardEntry } from '../../services/leaderboardService';
 
 const { width } = Dimensions.get('window');
 
 export default function LeaderboardScreen() {
   const { getLeaderboard } = useLeaderboardStore();
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'allTime'>('weekly');
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
     loadLeaderboard();
@@ -47,7 +48,7 @@ export default function LeaderboardScreen() {
     }
   };
 
-  const renderLeaderboardItem = ({ item, index }) => {
+  const renderLeaderboardItem = ({ item, index }: { item: LeaderboardEntry; index: number }) => {
     const rank = index + 1;
     const rankInfo = getRankIcon(rank);
     const isTopThree = rank <= 3;
@@ -63,7 +64,7 @@ export default function LeaderboardScreen() {
         
         <View style={styles.rankContainer}>
           <MaterialIcons 
-            name={rankInfo.icon} 
+            name={rankInfo.icon as any} 
             size={isTopThree ? 32 : 24} 
             color={rankInfo.color} 
           />

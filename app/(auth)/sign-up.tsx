@@ -49,7 +49,7 @@ export default function SignUpScreen() {
       await signUp(email, password, displayName);
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Sign Up Failed', error.message);
+      Alert.alert('Sign Up Failed', error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export default function SignUpScreen() {
       await signInWithGoogle();
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Google Sign Up Failed', error.message);
+      Alert.alert('Google Sign Up Failed', error instanceof Error ? error.message : 'An error occurred');
     }
   };
 
@@ -69,7 +69,7 @@ export default function SignUpScreen() {
       await signInWithApple();
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Apple Sign Up Failed', error.message);
+      Alert.alert('Apple Sign Up Failed', error instanceof Error ? error.message : 'An error occurred');
     }
   };
 

@@ -14,12 +14,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useBattleStore } from '../../hooks/useBattleStore';
+import { Battle } from '../../services/battleService';
 import { useAuthStore } from '../../hooks/useAuthStore';
 
 export default function BattleScreen() {
   const { user } = useAuthStore();
   const { getActiveBattles, joinBattle, createBattle } = useBattleStore();
-  const [battles, setBattles] = useState([]);
+  const [battles, setBattles] = useState<Battle[]>([]);
   const [selectedTab, setSelectedTab] = useState<'active' | 'upcoming'>('active');
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function BattleScreen() {
     }
   };
 
-  const renderBattleCard = ({ item }) => {
+  const renderBattleCard = ({ item }: { item: Battle }) => {
     const isActive = item.status === 'active';
     const isWaiting = item.status === 'waiting';
     const canJoin = isWaiting && item.participantCount < item.maxParticipants;

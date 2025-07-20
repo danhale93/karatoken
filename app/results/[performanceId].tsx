@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useKaraokeStore } from '../../hooks/useKaraokeStore';
 import { useWalletStore } from '../../hooks/useWalletStore';
+import { AIScore } from '../../services/karaokeService';
 
 const { width } = Dimensions.get('window');
 
@@ -22,7 +23,7 @@ export default function ResultsScreen() {
   const { performanceId } = useLocalSearchParams();
   const { getAIFeedback } = useKaraokeStore();
   const { balance } = useWalletStore();
-  const [aiScore, setAiScore] = useState(null);
+  const [aiScore, setAiScore] = useState<AIScore | null>(null);
   const [loading, setLoading] = useState(true);
   const [earnings, setEarnings] = useState(0);
 

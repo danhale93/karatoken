@@ -36,7 +36,7 @@ export default function SignInScreen() {
       await signIn(email, password);
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Sign In Failed', error.message);
+      Alert.alert('Sign In Failed', error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ export default function SignInScreen() {
       await signInWithGoogle();
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Google Sign In Failed', error.message);
+      Alert.alert('Google Sign In Failed', error instanceof Error ? error.message : 'An error occurred');
     }
   };
 
@@ -56,7 +56,7 @@ export default function SignInScreen() {
       await signInWithApple();
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Apple Sign In Failed', error.message);
+      Alert.alert('Apple Sign In Failed', error instanceof Error ? error.message : 'An error occurred');
     }
   };
 

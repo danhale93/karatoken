@@ -15,11 +15,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import { usePerformanceStore } from '../../hooks/usePerformanceStore';
+import { Performance } from '../../services/performanceService';
 
 export default function ProfileScreen() {
   const { user, signOut, updateProfile } = useAuthStore();
   const { getPerformances } = usePerformanceStore();
-  const [performances, setPerformances] = useState([]);
+  const [performances, setPerformances] = useState<Performance[]>([]);
   const [stats, setStats] = useState({
     totalPerformances: 0,
     averageScore: 0,
@@ -35,21 +36,23 @@ export default function ProfileScreen() {
 
   const loadUserData = async () => {
     try {
-      const userPerformances = await getPerformances(user.id);
-      setPerformances(userPerformances);
+      if (user) {
+        const userPerformances = await getPerformances(user.id);
+        setPerformances(userPerformances);
       
-      // Calculate stats
-      const totalPerformances = userPerformances.length;
-      const averageScore = totalPerformances > 0 
-        ? Math.round(userPerformances.reduce((sum, p) => sum + p.score, 0) / totalPerformances)
-        : 0;
-      
-      setStats({
-        totalPerformances,
-        averageScore,
-        battlesWon: 12, // Mock data
-        totalEarnings: 2450, // Mock data
-      });
+        // Calculate stats
+        const totalPerformances = userPerformances.length;
+        const averageScore = totalPerformances > 0 
+          ? Math.round(userPerformances.reduce((sum, p) => sum + p.score, 0) / totalPerformances)
+          : 0;
+        
+        setStats({
+          totalPerformances,
+          averageScore,
+          battlesWon: 12, // Mock data
+          totalEarnings: 2450, // Mock data
+        });
+      }
     } catch (error) {
       console.error('Error loading user data:', error);
     }

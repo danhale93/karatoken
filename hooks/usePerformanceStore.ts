@@ -12,6 +12,7 @@ interface PerformanceState {
   savePerformance: (performanceId: string, videoUrl: string) => Promise<void>;
   getPerformances: (userId: string) => Promise<Performance[]>;
   getRecentPerformances: (userId: string) => Promise<Performance[]>;
+  getPerformanceById: (performanceId: string) => Promise<Performance>;
   deletePerformance: (performanceId: string) => Promise<void>;
 }
 
@@ -76,6 +77,15 @@ export const usePerformanceStore = create<PerformanceState>((set, get) => ({
     try {
       const performances = await performanceService.getRecentPerformances(userId);
       return performances;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getPerformanceById: async (performanceId: string) => {
+    try {
+      const performance = await performanceService.getPerformanceById(performanceId);
+      return performance;
     } catch (error) {
       throw error;
     }
