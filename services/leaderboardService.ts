@@ -1,4 +1,6 @@
 // Powered by OnSpace.AI
+import Config from '../constants/Config';
+import { MOCK_LEADERBOARD } from '../constants/MockData';
 export interface LeaderboardEntry {
   id: string;
   userId: string;

@@ -1,4 +1,7 @@
 // Powered by OnSpace.AI
+import Config from '../constants/Config';
+import { MOCK_SONGS } from '../constants/MockData';
+
 export interface Song {
   id: string;
   title: string;
@@ -15,10 +18,27 @@ export interface Song {
 }
 
 class SongService {
+  private simulateApiDelay(): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700));
+  }
+
   async searchSongs(query: string): Promise<Song[]> {
+    await this.simulateApiDelay();
+    
+    if (Config.USE_MOCK_DATA) {
+      // Mock implementation for demo
+      const filteredSongs = MOCK_SONGS.filter(song => 
+        song.title.toLowerCase().includes(query.toLowerCase()) ||
+        song.artist.toLowerCase().includes(query.toLowerCase()) ||
+        song.genre.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      return filteredSongs;
+    }
+    
+    // TODO: Replace with actual API call
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(query)}`);
+      const response = await fetch(`${Config.API_BASE_URL}/songs/search?q=${encodeURIComponent(query)}`);
       
       if (!response.ok) {
         throw new Error('Failed to search songs');
@@ -27,45 +47,21 @@ class SongService {
       const songs = await response.json();
       return songs;
     } catch (error) {
-      // Mock implementation for demo
-      const mockSongs: Song[] = [
-        {
-          id: 'song-search-1',
-          title: 'Bohemian Rhapsody',
-          artist: 'Queen',
-          albumArt: 'https://picsum.photos/seed/queen/300/300.webp',
-          duration: 355,
-          difficulty: 'Hard',
-          genre: 'Rock',
-          rating: 4.9,
-          playCount: 15420,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'song-search-2',
-          title: 'Sweet Caroline',
-          artist: 'Neil Diamond',
-          albumArt: 'https://picsum.photos/seed/diamond/300/300.webp',
-          duration: 201,
-          difficulty: 'Medium',
-          genre: 'Pop',
-          rating: 4.7,
-          playCount: 8930,
-          createdAt: new Date().toISOString(),
-        },
-      ].filter(song => 
-        song.title.toLowerCase().includes(query.toLowerCase()) ||
-        song.artist.toLowerCase().includes(query.toLowerCase())
-      );
-      
-      return mockSongs;
+      throw new Error('Failed to search songs');
     }
   }
 
   async getFeaturedSongs(): Promise<Song[]> {
+    await this.simulateApiDelay();
+    
+    if (Config.USE_MOCK_DATA) {
+      // Mock implementation for demo - return featured songs
+      return MOCK_SONGS.slice(0, 4); // Return first 4 songs as featured
+    }
+    
+    // TODO: Replace with actual API call
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/songs/featured');
+      const response = await fetch(`${Config.API_BASE_URL}/songs/featured`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch featured songs');
@@ -74,57 +70,7 @@ class SongService {
       const songs = await response.json();
       return songs;
     } catch (error) {
-      // Mock implementation for demo
-      return [
-        {
-          id: 'featured-1',
-          title: 'Perfect',
-          artist: 'Ed Sheeran',
-          albumArt: 'https://picsum.photos/seed/edsheeran/300/300.webp',
-          duration: 263,
-          difficulty: 'Medium',
-          genre: 'Pop',
-          rating: 4.8,
-          playCount: 12500,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'featured-2',
-          title: 'Someone Like You',
-          artist: 'Adele',
-          albumArt: 'https://picsum.photos/seed/adele/300/300.webp',
-          duration: 285,
-          difficulty: 'Medium',
-          genre: 'Pop',
-          rating: 4.9,
-          playCount: 18200,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'featured-3',
-          title: 'Hotel California',
-          artist: 'Eagles',
-          albumArt: 'https://picsum.photos/seed/eagles/300/300.webp',
-          duration: 391,
-          difficulty: 'Hard',
-          genre: 'Rock',
-          rating: 4.7,
-          playCount: 9800,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'featured-4',
-          title: 'Imagine',
-          artist: 'John Lennon',
-          albumArt: 'https://picsum.photos/seed/lennon/300/300.webp',
-          duration: 183,
-          difficulty: 'Easy',
-          genre: 'Pop',
-          rating: 4.9,
-          playCount: 14300,
-          createdAt: new Date().toISOString(),
-        },
-      ];
+      throw new Error('Failed to fetch featured songs');
     }
   }
 

@@ -164,7 +164,7 @@ export default function SignInScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Text 
                 style={styles.linkText}
                 onPress={() => router.push('/(auth)/sign-up')}
