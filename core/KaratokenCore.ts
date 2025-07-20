@@ -14,6 +14,7 @@ import CryptoEngine from './engines/CryptoEngine';
 import SocialEngine from './engines/SocialEngine';
 import PerformanceEngine from './engines/PerformanceEngine';
 import ContentEngine from './engines/ContentEngine';
+import AgenticAIEngine from './engines/AgenticAIEngine';
 
 /**
  * 🌟 KARATOKEN CORE STATE
@@ -86,6 +87,7 @@ export class KaratokenCore extends EventEmitter {
   private socialEngine: SocialEngine;
   private performanceEngine: PerformanceEngine;
   private contentEngine: ContentEngine;
+  private agenticAIEngine: AgenticAIEngine;
   
   private isInitialized = false;
   
@@ -127,6 +129,7 @@ export class KaratokenCore extends EventEmitter {
         this.socialEngine.initialize(),
         this.performanceEngine.initialize(),
         this.contentEngine.initialize(),
+        this.agenticAIEngine.initialize(),
       ]);
       
       // Set up cross-engine communication
@@ -419,6 +422,7 @@ export class KaratokenCore extends EventEmitter {
     this.socialEngine = new SocialEngine();
     this.performanceEngine = new PerformanceEngine();
     this.contentEngine = new ContentEngine();
+    this.agenticAIEngine = new AgenticAIEngine();
   }
   
   private setupEngineIntegration(): void {
@@ -433,6 +437,23 @@ export class KaratokenCore extends EventEmitter {
     
     this.socialEngine.on('battle:scored', (score) => {
       this.cryptoEngine.processBattleReward(score);
+    });
+
+    // Agentic AI Integration
+    this.agenticAIEngine.on('plugin_generated', (event) => {
+      DEBUG.log.success(`🤖 New plugin generated: ${event.plugin.name}`);
+      this.emit('feature:generated', event);
+    });
+
+    this.agenticAIEngine.on('plugin_activated', (plugin) => {
+      DEBUG.log.info(`🟢 Plugin activated: ${plugin.name}`);
+      this.emit('feature:activated', plugin);
+    });
+
+    // Cultural transformation events
+    this.audioEngine.on('culturalTransformation', (event) => {
+      DEBUG.log.info(`🌍 Cultural transformation: ${event.from} → ${event.to} (${event.accuracy}% accuracy)`);
+      this.emit('culture:transformed', event);
     });
   }
   
@@ -489,6 +510,112 @@ export class KaratokenCore extends EventEmitter {
   
   getEconomyState() {
     return this.state.economy;
+  }
+
+  /**
+   * 🤖 AGENTIC AI METHODS - Self-Generating Features
+   */
+  async requestFeature(userRequest: string): Promise<string> {
+    DEBUG.log.karatoken(`🤖 Processing agentic AI feature request: "${userRequest}"`);
+    return await this.agenticAIEngine.requestFeature(userRequest);
+  }
+
+  getInstalledPlugins() {
+    return this.agenticAIEngine.getInstalledPlugins();
+  }
+
+  getFeatureRequests() {
+    return this.agenticAIEngine.getFeatureRequests();
+  }
+
+  async activatePlugin(pluginId: string): Promise<void> {
+    await this.agenticAIEngine.activatePlugin(pluginId);
+  }
+
+  async deactivatePlugin(pluginId: string): Promise<void> {
+    await this.agenticAIEngine.deactivatePlugin(pluginId);
+  }
+
+  async getPluginStats() {
+    return await this.agenticAIEngine.getPluginStats();
+  }
+
+  /**
+   * 🎭 ENHANCED GENRE SWAPPING - Cultural & Niche Music
+   */
+  async swapGenreAdvanced(params: {
+    audioUrl: string;
+    targetGenre: string;
+    preserveVocals?: boolean;
+    culturalAuthenticity?: number;
+    nicheAccuracy?: number;
+    subgenreVariant?: string;
+    regionalFlavor?: string;
+    instrumentSwapping?: boolean;
+    rhythmicComplexity?: 'simple' | 'moderate' | 'complex' | 'traditional';
+  }): Promise<{
+    swappedAudioUrl: string;
+    originalStems: any;
+    processedStems: any;
+    confidence: number;
+    culturalAccuracy: number;
+    genreMetadata: any;
+  }> {
+    DEBUG.log.karatoken(`🎭 Advanced genre swap: ${params.targetGenre} with cultural intelligence`);
+    
+    return await this.audioEngine.swapGenre(params.audioUrl, params.targetGenre, {
+      preserveVocals: params.preserveVocals,
+      culturalAuthenticity: params.culturalAuthenticity,
+      nicheAccuracy: params.nicheAccuracy,
+      subgenreVariant: params.subgenreVariant,
+      regionalFlavor: params.regionalFlavor,
+      instrumentSwapping: params.instrumentSwapping,
+      rhythmicComplexity: params.rhythmicComplexity
+    });
+  }
+
+  /**
+   * 🌍 CULTURAL MUSIC DISCOVERY
+   */
+  async searchByculture(query: string, options: {
+    culture?: string;
+    nicheness?: number;
+    region?: string;
+    language?: string;
+    includeSubcultures?: boolean;
+  } = {}) {
+    return await this.contentEngine.searchByculture(query, options);
+  }
+
+  async discoverNicheMusic(preferences: {
+    aventurousness: number;
+    currentGenres: string[];
+    excludedCultures?: string[];
+  }) {
+    return await this.contentEngine.discoverNicheMusic(preferences);
+  }
+
+  async getCulturalStats() {
+    return await this.contentEngine.getCulturalStats();
+  }
+
+  /**
+   * 🎪 EUROVISION & FESTIVAL INTEGRATION
+   */
+  async getEurovisionByYear(year: number) {
+    return await this.contentEngine.getEurovisionByYear(year);
+  }
+
+  async getEurovisionByCountry(country: string) {
+    return await this.contentEngine.getEurovisionByCountry(country);
+  }
+
+  async getFestivalOpportunities() {
+    return await this.contentEngine.getFestivalOpportunities();
+  }
+
+  async proposeKaratokenTent(festivalId: string) {
+    return await this.contentEngine.proposeKaratokenTent(festivalId);
   }
 }
 
@@ -609,5 +736,5 @@ export interface GenreSwapStatus {}
 export interface VoiceEnhancementState {}
 export interface AIRecommendations {}
 
-// Export the singleton instance
-export default KaratokenCore.getInstance();
+// Export the class itself
+export default KaratokenCore;

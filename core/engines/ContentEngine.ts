@@ -4,37 +4,567 @@
  */
 
 import { EventEmitter } from 'events';
-import DEBUG from '../../utils/devUtils';
+import { youtubeService } from '../../services/youtubeService';
+import { multiSourceContentService } from '../../services/multiSourceContentService';
+
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  duration: number;
+  genre: string;
+  difficulty: number;
+  popularity: number;
+  hasLyrics: boolean;
+  hasKaraokeVersion: boolean;
+  sources: string[];
+  audioUrl?: string;
+  lyricsUrl?: string;
+  imageUrl?: string;
+  // Eurovision & Festival Integration
+  isEurovision?: boolean;
+  eurovisionYear?: number;
+  eurovisionCountry?: string;
+  isFestivalTrack?: boolean;
+  festivalName?: string;
+  festivalYear?: number;
+  // Cultural & Niche Categories
+  culturalTags: string[];
+  subculture: string[];
+  languageCode: string;
+  regionalOrigin: string;
+  nicheness: number; // 1-10, higher = more niche
+}
+
+export interface FestivalData {
+  id: string;
+  name: string;
+  type: 'eurovision' | 'kpop' | 'electronic' | 'folk' | 'world' | 'indie' | 'metal' | 'jazz' | 'classical';
+  year: number;
+  location: string;
+  country: string;
+  songs: string[]; // song IDs
+  isLive: boolean;
+  hasKaratokenPresence: boolean;
+  tentLocation?: string;
+  liveStageSetup?: boolean;
+}
+
+export interface CulturalGenre {
+  id: string;
+  name: string;
+  origin: string;
+  instruments: string[];
+  vocalsStyle: string[];
+  tempoRange: [number, number];
+  keySignatures: string[];
+  rhythmPatterns: string[];
+  culturalContext: string;
+  subgenres: string[];
+  nicheness: number;
+  popularityTrend: 'rising' | 'stable' | 'declining' | 'emerging';
+}
 
 export default class ContentEngine extends EventEmitter {
   private isInitialized = false;
-  private youtubeApi?: any;
-  private songCache = new Map();
-  private searchCache = new Map();
+  private songLibrary: Map<string, Song> = new Map();
+  private recommendations: string[] = [];
+  private searchHistory: string[] = [];
+  private favoriteGenres: string[] = [];
+  private offlineContent: Set<string> = new Set();
   
+  // Eurovision & Festival Features
+  private eurovisionDatabase: Map<string, Song> = new Map();
+  private festivalDatabase: Map<string, FestivalData> = new Map();
+  private liveEvents: Map<string, FestivalData> = new Map();
+  
+  // Cultural & Niche Music
+  private culturalGenres: Map<string, CulturalGenre> = new Map();
+  private nicheCollections: Map<string, Song[]> = new Map();
+  private regionalPlaylists: Map<string, string[]> = new Map();
+
+  constructor() {
+    super();
+    this.initializeCulturalDatabase();
+    this.initializeEurovisionDatabase();
+    this.initializeFestivalPartnerships();
+  }
+
   async initialize(): Promise<void> {
-    DEBUG.log.karatoken('🎵 Initializing Content Engine...');
-    DEBUG.time.start('Content Engine Init');
-    
     try {
-      // Initialize content modules
-      await Promise.all([
-        this.initializeYouTubeAPI(),
-        this.initializeSongDatabase(),
-        this.initializeContentRecommendations(),
-        this.initializeOfflineCache(),
-      ]);
+      console.log('🎵 Initializing Content Engine...');
+      
+      // Initialize multi-source content service
+      try {
+        await multiSourceContentService.initialize();
+      } catch (error) {
+        console.warn('⚠️ Multi-source content service initialization deferred');
+      }
+      
+      // Load cultural and niche music databases
+      await this.loadCulturalContent();
+      await this.loadEurovisionContent();
+      await this.loadFestivalContent();
       
       this.isInitialized = true;
-      DEBUG.time.end('Content Engine Init');
-      DEBUG.log.success('🎵 Content Engine ready to rock!');
-      
+      this.emit('contentEngineReady');
+      console.log('✅ Content Engine initialized with global music access!');
     } catch (error) {
-      DEBUG.log.error('Content Engine initialization failed', error);
+      console.error('❌ Content Engine initialization failed:', error);
       throw error;
     }
   }
-  
+
+  // Eurovision Integration
+  private async initializeEurovisionDatabase(): Promise<void> {
+    const eurovisionGenres: CulturalGenre[] = [
+      {
+        id: 'eurovision_pop',
+        name: 'Eurovision Pop',
+        origin: 'Europe',
+        instruments: ['synthesizer', 'drums', 'electric_guitar', 'violin', 'accordion'],
+        vocalsStyle: ['dramatic', 'operatic', 'multilingual', 'anthemic'],
+        tempoRange: [120, 140],
+        keySignatures: ['C major', 'G major', 'D major', 'A major'],
+        rhythmPatterns: ['4/4', '3/4', 'ballad', 'uptempo'],
+        culturalContext: 'International music competition showcasing European diversity',
+        subgenres: ['Eurovision Ballad', 'Eurovision Dance', 'Eurovision Folk', 'Eurovision Rock'],
+        nicheness: 7,
+        popularityTrend: 'stable'
+      }
+    ];
+
+    eurovisionGenres.forEach(genre => {
+      this.culturalGenres.set(genre.id, genre);
+    });
+  }
+
+  async loadEurovisionContent(): Promise<void> {
+    // Load Eurovision songs from 1956 to present
+    const eurovisionYears = Array.from({length: 2025 - 1956}, (_, i) => 1956 + i);
+    
+    for (const year of eurovisionYears.slice(-10)) { // Load last 10 years for now
+      try {
+        const eurovisionSongs = await multiSourceContentService.searchSongs(
+          `Eurovision ${year} songs`,
+          { includeKaraokeVersions: true, maxResults: 50 }
+        );
+        
+        eurovisionSongs.forEach(song => {
+          const eurovisionSong: Song = {
+            ...song,
+            isEurovision: true,
+            eurovisionYear: year,
+            culturalTags: ['eurovision', 'european', 'international'],
+            subculture: ['eurovision_fans', 'european_music'],
+            languageCode: 'multi',
+            regionalOrigin: 'Europe',
+            nicheness: 6
+          };
+          
+          this.eurovisionDatabase.set(song.id, eurovisionSong);
+          this.songLibrary.set(song.id, eurovisionSong);
+        });
+      } catch (error) {
+        console.warn(`Failed to load Eurovision ${year} content:`, error);
+      }
+    }
+  }
+
+  // Festival Integration & Partnership System
+  private async initializeFestivalPartnerships(): Promise<void> {
+    const festivals: FestivalData[] = [
+      {
+        id: 'eurovision_2024',
+        name: 'Eurovision Song Contest 2024',
+        type: 'eurovision',
+        year: 2024,
+        location: 'Malmö, Sweden',
+        country: 'Sweden',
+        songs: [],
+        isLive: false,
+        hasKaratokenPresence: true,
+        tentLocation: 'Eurovision Village - Interactive Zone',
+        liveStageSetup: true
+      },
+      {
+        id: 'kpop_festa_2024',
+        name: 'K-Pop Music Festival 2024',
+        type: 'kpop',
+        year: 2024,
+        location: 'Seoul, South Korea',
+        country: 'South Korea',
+        songs: [],
+        isLive: false,
+        hasKaratokenPresence: true,
+        tentLocation: 'Han River Park - K-Pop Zone',
+        liveStageSetup: true
+      },
+      {
+        id: 'coachella_2024',
+        name: 'Coachella Valley Music Festival',
+        type: 'indie',
+        year: 2024,
+        location: 'Indio, California',
+        country: 'USA',
+        songs: [],
+        isLive: false,
+        hasKaratokenPresence: false, // Potential partnership
+        tentLocation: 'TBD - Karatoken Village Proposal',
+        liveStageSetup: false
+      }
+    ];
+
+    festivals.forEach(festival => {
+      this.festivalDatabase.set(festival.id, festival);
+    });
+  }
+
+  // Cultural & Niche Music Categories
+  private async initializeCulturalDatabase(): Promise<void> {
+    const culturalGenres: CulturalGenre[] = [
+      // Asian Cultures
+      {
+        id: 'kpop',
+        name: 'K-Pop',
+        origin: 'South Korea',
+        instruments: ['synthesizer', 'drums', 'electric_guitar', 'traditional_korean'],
+        vocalsStyle: ['idol', 'rap', 'melodic', 'harmonized'],
+        tempoRange: [100, 160],
+        keySignatures: ['C major', 'G major', 'D major', 'A minor'],
+        rhythmPatterns: ['4/4', 'trap', 'dance', 'ballad'],
+        culturalContext: 'Korean pop music with global influence',
+        subgenres: ['K-Pop Dance', 'K-Pop Ballad', 'K-Pop Hip-Hop', 'K-Pop R&B'],
+        nicheness: 4,
+        popularityTrend: 'rising'
+      },
+      {
+        id: 'jpop',
+        name: 'J-Pop',
+        origin: 'Japan',
+        instruments: ['synthesizer', 'drums', 'electric_guitar', 'shamisen', 'koto'],
+        vocalsStyle: ['kawaii', 'dramatic', 'anime_style', 'idol'],
+        tempoRange: [90, 150],
+        keySignatures: ['C major', 'F major', 'G major', 'E minor'],
+        rhythmPatterns: ['4/4', 'waltz', 'anime_beat', 'j_rock'],
+        culturalContext: 'Japanese popular music with anime and idol culture influence',
+        subgenres: ['Anime Songs', 'Idol Pop', 'Visual Kei', 'Shibuya-kei'],
+        nicheness: 5,
+        popularityTrend: 'stable'
+      },
+      {
+        id: 'bollywood',
+        name: 'Bollywood',
+        origin: 'India',
+        instruments: ['tabla', 'sitar', 'harmonium', 'violin', 'flute'],
+        vocalsStyle: ['classical_indian', 'playback_singing', 'qawwali', 'thumri'],
+        tempoRange: [80, 140],
+        keySignatures: ['ragas', 'C major', 'D major', 'A minor'],
+        rhythmPatterns: ['16_beat', 'classical_tala', 'bhangra', 'garba'],
+        culturalContext: 'Indian film music combining traditional and modern elements',
+        subgenres: ['Classical Bollywood', 'Modern Bollywood', 'Item Songs', 'Devotional'],
+        nicheness: 3,
+        popularityTrend: 'stable'
+      },
+      // European Cultures
+      {
+        id: 'nordic_folk',
+        name: 'Nordic Folk',
+        origin: 'Scandinavia',
+        instruments: ['hardanger_fiddle', 'nyckelharpa', 'accordion', 'jaw_harp'],
+        vocalsStyle: ['yoik', 'kulning', 'folk_ballad', 'throat_singing'],
+        tempoRange: [60, 120],
+        keySignatures: ['D minor', 'A minor', 'modal_scales', 'pentatonic'],
+        rhythmPatterns: ['3/4', '6/8', 'polska', 'mazurka'],
+        culturalContext: 'Traditional Scandinavian music with mystical themes',
+        subgenres: ['Norwegian Folk', 'Swedish Folk', 'Danish Folk', 'Faroese Chain Dance'],
+        nicheness: 8,
+        popularityTrend: 'emerging'
+      },
+      {
+        id: 'balkan_folk',
+        name: 'Balkan Folk',
+        origin: 'Balkans',
+        instruments: ['accordion', 'clarinet', 'violin', 'drums', 'brass'],
+        vocalsStyle: ['traditional_balkan', 'gypsy_style', 'orthodox_chant'],
+        tempoRange: [100, 180],
+        keySignatures: ['harmonic_minor', 'phrygian', 'mixolydian'],
+        rhythmPatterns: ['7/8', '9/8', '11/8', 'complex_meters'],
+        culturalContext: 'Energetic folk music from Southeastern Europe',
+        subgenres: ['Serbian Folk', 'Bulgarian Folk', 'Romanian Folk', 'Gypsy Jazz'],
+        nicheness: 7,
+        popularityTrend: 'stable'
+      },
+      // African Cultures
+      {
+        id: 'afrobeats',
+        name: 'Afrobeats',
+        origin: 'West Africa',
+        instruments: ['drums', 'talking_drum', 'kalimba', 'saxophone', 'trumpet'],
+        vocalsStyle: ['call_response', 'yoruba_singing', 'pidgin_english'],
+        tempoRange: [100, 130],
+        keySignatures: ['pentatonic', 'C major', 'G major', 'F major'],
+        rhythmPatterns: ['4/4', 'polyrhythm', 'clave', 'afrobeat'],
+        culturalContext: 'Contemporary African popular music with global appeal',
+        subgenres: ['Nigerian Afrobeats', 'Ghanaian Afrobeats', 'Afro-fusion', 'Afro-pop'],
+        nicheness: 4,
+        popularityTrend: 'rising'
+      },
+      // Latin American Cultures
+      {
+        id: 'reggaeton',
+        name: 'Reggaeton',
+        origin: 'Puerto Rico',
+        instruments: ['drums', 'synthesizer', 'bass', 'trumpet', 'trombone'],
+        vocalsStyle: ['rap_spanish', 'melodic_spanish', 'autotune'],
+        tempoRange: [90, 110],
+        keySignatures: ['A minor', 'D minor', 'G minor', 'C major'],
+        rhythmPatterns: ['dembow', '4/4', 'perreo', 'trap_latino'],
+        culturalContext: 'Latin urban music with Caribbean influences',
+        subgenres: ['Classic Reggaeton', 'Trap Latino', 'Reggaeton Pop', 'Reggaeton Romantico'],
+        nicheness: 3,
+        popularityTrend: 'rising'
+      },
+      // Niche Electronic Subcultures
+      {
+        id: 'vaporwave',
+        name: 'Vaporwave',
+        origin: 'Internet Culture',
+        instruments: ['synthesizer', 'samples', 'drum_machine', 'reverb'],
+        vocalsStyle: ['pitched_down', 'japanese_samples', 'nostalgic'],
+        tempoRange: [60, 90],
+        keySignatures: ['major_7th', 'suspended', 'ambient'],
+        rhythmPatterns: ['slow_trap', 'lo_fi', 'ambient'],
+        culturalContext: 'Internet-born aesthetic focused on 80s/90s nostalgia',
+        subgenres: ['Classic Vaporwave', 'Future Funk', 'Mallsoft', 'Hardvapour'],
+        nicheness: 9,
+        popularityTrend: 'declining'
+      },
+      {
+        id: 'phonk',
+        name: 'Phonk',
+        origin: 'Southern USA / Internet',
+        instruments: ['808_drums', 'samples', 'synthesizer', 'distortion'],
+        vocalsStyle: ['memphis_rap_samples', 'pitched_vocals', 'trap_vocals'],
+        tempoRange: [120, 160],
+        keySignatures: ['minor_keys', 'tritones', 'dissonant'],
+        rhythmPatterns: ['trap', 'drift_phonk', 'memphis_pattern'],
+        culturalContext: 'Underground hip-hop revival with modern electronic elements',
+        subgenres: ['Memphis Phonk', 'Drift Phonk', 'House Phonk', 'Aggressive Phonk'],
+        nicheness: 8,
+        popularityTrend: 'rising'
+      }
+    ];
+
+    culturalGenres.forEach(genre => {
+      this.culturalGenres.set(genre.id, genre);
+    });
+  }
+
+  async loadCulturalContent(): Promise<void> {
+    for (const [genreId, genre] of this.culturalGenres) {
+      try {
+        // Load songs for each cultural genre
+        const songs = await multiSourceContentService.searchSongs(
+          `${genre.name} songs popular`,
+          { includeKaraokeVersions: true, maxResults: 100 }
+        );
+
+        const culturalSongs = songs.map(song => ({
+          ...song,
+          culturalTags: [genreId, genre.origin.toLowerCase().replace(/\s+/g, '_')],
+          subculture: genre.subgenres.map(sub => sub.toLowerCase().replace(/\s+/g, '_')),
+          languageCode: this.getLanguageForGenre(genreId),
+          regionalOrigin: genre.origin,
+          nicheness: genre.nicheness
+        }));
+
+        this.nicheCollections.set(genreId, culturalSongs);
+        
+        // Add to main library
+        culturalSongs.forEach(song => {
+          this.songLibrary.set(song.id, song);
+        });
+
+        console.log(`✅ Loaded ${culturalSongs.length} ${genre.name} songs`);
+      } catch (error) {
+        console.warn(`Failed to load ${genre.name} content:`, error);
+      }
+    }
+  }
+
+  private getLanguageForGenre(genreId: string): string {
+    const languageMap: Record<string, string> = {
+      'kpop': 'ko',
+      'jpop': 'ja',
+      'bollywood': 'hi',
+      'nordic_folk': 'sv',
+      'balkan_folk': 'sr',
+      'afrobeats': 'en',
+      'reggaeton': 'es',
+      'vaporwave': 'en',
+      'phonk': 'en',
+      'eurovision_pop': 'multi'
+    };
+    return languageMap[genreId] || 'en';
+  }
+
+  // Festival Partnership Methods
+  async getFestivalOpportunities(): Promise<FestivalData[]> {
+    return Array.from(this.festivalDatabase.values()).filter(
+      festival => !festival.hasKaratokenPresence
+    );
+  }
+
+  async proposeKaratokenTent(festivalId: string): Promise<{
+    proposal: string;
+    setup: string;
+    expectedReach: number;
+    culturalImpact: string;
+  }> {
+    const festival = this.festivalDatabase.get(festivalId);
+    if (!festival) throw new Error('Festival not found');
+
+    return {
+      proposal: `Karatoken Pop-Up Experience at ${festival.name}`,
+      setup: `Interactive karaoke tent with live AI scoring, genre swapping demos, and real-time battle competitions. Features ${festival.type} music focus with cultural authenticity.`,
+      expectedReach: this.calculateFestivalReach(festival),
+      culturalImpact: `Introduce ${festival.type} music culture to global audience through interactive karaoke experience`
+    };
+  }
+
+  private calculateFestivalReach(festival: FestivalData): number {
+    const baseReach = {
+      'eurovision': 200000000,
+      'kpop': 50000000,
+      'electronic': 30000000,
+      'indie': 20000000,
+      'folk': 5000000,
+      'world': 10000000
+    };
+    return baseReach[festival.type] || 1000000;
+  }
+
+  // Enhanced Search with Cultural Filtering
+  async searchByculture(query: string, options: {
+    culture?: string;
+    nicheness?: number;
+    region?: string;
+    language?: string;
+    includeSubcultures?: boolean;
+  } = {}): Promise<Song[]> {
+    let results: Song[] = [];
+
+    if (options.culture) {
+      const nicheCollection = this.nicheCollections.get(options.culture);
+      if (nicheCollection) {
+        results = nicheCollection.filter(song => 
+          song.title.toLowerCase().includes(query.toLowerCase()) ||
+          song.artist.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+    } else {
+      // Search across all cultures
+      results = Array.from(this.songLibrary.values()).filter(song => {
+        const matchesQuery = song.title.toLowerCase().includes(query.toLowerCase()) ||
+                           song.artist.toLowerCase().includes(query.toLowerCase());
+        
+        const matchesNicheness = !options.nicheness || song.nicheness <= options.nicheness;
+        const matchesRegion = !options.region || song.regionalOrigin.toLowerCase().includes(options.region.toLowerCase());
+        const matchesLanguage = !options.language || song.languageCode === options.language;
+
+        return matchesQuery && matchesNicheness && matchesRegion && matchesLanguage;
+      });
+    }
+
+    // Sort by cultural relevance and nicheness
+    results.sort((a, b) => {
+      if (options.culture) {
+        return b.popularity - a.popularity; // Popular first within culture
+      }
+      return a.nicheness - b.nicheness; // Less niche first for discovery
+    });
+
+    return results.slice(0, 50);
+  }
+
+  // Eurovision Specific Methods
+  async getEurovisionByYear(year: number): Promise<Song[]> {
+    return Array.from(this.eurovisionDatabase.values()).filter(
+      song => song.eurovisionYear === year
+    );
+  }
+
+  async getEurovisionByCountry(country: string): Promise<Song[]> {
+    return Array.from(this.eurovisionDatabase.values()).filter(
+      song => song.eurovisionCountry?.toLowerCase() === country.toLowerCase()
+    );
+  }
+
+  // Cultural Discovery & Recommendation
+  async discoverNicheMusic(preferences: {
+    aventurousness: number; // 1-10, how willing to explore
+    currentGenres: string[];
+    excludedCultures?: string[];
+  }): Promise<Song[]> {
+    const targetNicheness = Math.min(preferences.aventurousness, 10);
+    
+    const discoveries = Array.from(this.songLibrary.values()).filter(song => {
+      const isNicheEnough = song.nicheness >= targetNicheness;
+      const isNotCurrentGenre = !preferences.currentGenres.some(genre => 
+        song.culturalTags.includes(genre)
+      );
+      const isNotExcluded = !preferences.excludedCultures?.some(culture => 
+        song.culturalTags.includes(culture)
+      );
+
+      return isNicheEnough && isNotCurrentGenre && isNotExcluded;
+    });
+
+    // Prioritize rising trends and emerging genres
+    discoveries.sort((a, b) => {
+      const aGenre = this.culturalGenres.get(a.culturalTags[0]);
+      const bGenre = this.culturalGenres.get(b.culturalTags[0]);
+      
+      const aScore = (aGenre?.popularityTrend === 'rising' ? 2 : 0) +
+                    (aGenre?.popularityTrend === 'emerging' ? 3 : 0) +
+                    a.nicheness;
+      const bScore = (bGenre?.popularityTrend === 'rising' ? 2 : 0) +
+                    (bGenre?.popularityTrend === 'emerging' ? 3 : 0) +
+                    b.nicheness;
+
+      return bScore - aScore;
+    });
+
+    return discoveries.slice(0, 20);
+  }
+
+  async getCulturalStats(): Promise<{
+    totalCultures: number;
+    totalNicheSongs: number;
+    trendingCultures: string[];
+    emergingGenres: string[];
+    festivalPartnerships: number;
+    eurovisionCoverage: number;
+  }> {
+    const trendingCultures = Array.from(this.culturalGenres.values())
+      .filter(genre => genre.popularityTrend === 'rising')
+      .map(genre => genre.name);
+
+    const emergingGenres = Array.from(this.culturalGenres.values())
+      .filter(genre => genre.popularityTrend === 'emerging')
+      .map(genre => genre.name);
+
+    return {
+      totalCultures: this.culturalGenres.size,
+      totalNicheSongs: Array.from(this.songLibrary.values()).filter(song => song.nicheness >= 6).length,
+      trendingCultures,
+      emergingGenres,
+      festivalPartnerships: Array.from(this.festivalDatabase.values()).filter(f => f.hasKaratokenPresence).length,
+      eurovisionCoverage: this.eurovisionDatabase.size
+    };
+  }
+
   /**
    * 🌍 YOUTUBE API INTEGRATION - The Foundation
    */
@@ -710,25 +1240,6 @@ export default class ContentEngine extends EventEmitter {
 }
 
 // Type definitions
-export interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  youtubeId?: string;
-  duration: number;
-  thumbnail: string;
-  popularity: number;
-  genre: string;
-  audioUrl: string;
-  lyrics: any[];
-  metadata: any;
-  karaokeReady?: boolean;
-  hasInstrumental?: boolean;
-  hasVocalGuide?: boolean;
-  difficulty?: 'easy' | 'medium' | 'hard';
-  vocalRange?: VocalRange;
-}
-
 export interface SearchOptions {
   maxResults?: number;
   genre?: string;

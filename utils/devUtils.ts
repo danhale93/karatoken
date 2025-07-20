@@ -153,6 +153,7 @@ export const DEBUG = {
 };
 
 // Global debug helper (use in console)
+const __DEV__ = process.env.NODE_ENV !== 'production';
 if (__DEV__) {
   (global as any).DEBUG = DEBUG;
   Logger.success('🚀 Debug utilities loaded! Use DEBUG.log.info("Hello World!")');
