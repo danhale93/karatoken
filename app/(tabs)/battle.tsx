@@ -1,5 +1,5 @@
-// Powered by OnSpace.AI
-import React, { useState, useEffect } from 'react';
+// Powered by OnSpace.AI - Karatoken Battle Mode
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,

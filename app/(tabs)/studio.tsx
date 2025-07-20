@@ -260,7 +260,10 @@ Music rising from the dust
             <Text style={styles.quickActionText}>Generate Song</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.quickAction}>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => router.push('/genre-swap')}
+          >
             <MaterialIcons name="swap-horiz" size={24} color="#059669" />
             <Text style={styles.quickActionText}>Genre Swap</Text>
           </TouchableOpacity>

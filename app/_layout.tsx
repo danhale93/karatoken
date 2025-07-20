@@ -26,6 +26,8 @@ export default function RootLayout() {
         <Stack.Screen name="battle" />
         <Stack.Screen name="performance" />
         <Stack.Screen name="song-selection" />
+        <Stack.Screen name="genre-swap" />
+        <Stack.Screen name="karaoke" />
       </Stack>
     </SafeAreaProvider>
   );
