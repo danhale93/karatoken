@@ -1,50 +1,75 @@
-# Welcome to your Expo app 👋
+# Welcome to OnSpace AI
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Onspace AI empowers anyone to turn ideas into powerful AI applications in minutes—no coding required. Our free, no-code platform enables effortless creation of custom AI apps; simply describe your vision and our agentic AI handles the rest. The onspace-app, built with React Native and Expo, demonstrates this capability—integrating popular third-party libraries to deliver seamless cross-platform performance across iOS, Android, and Web environments.
 
-## Get started
+## Getting Started
 
-1. Install dependencies
+### 1. Install Dependencies
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+# or
+yarn install
+```
 
-2. Start the app
+### 2. Start the Project
 
-   ```bash
-   npx expo start
-   ```
+- Start the development server (choose your platform):
 
-In the output, you'll find options to open the app in a
+```bash
+npm run start         # Start Expo development server
+npm run android       # Launch Android emulator
+npm run ios           # Launch iOS simulator
+npm run web           # Start the web version
+```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+- Reset the project (clear cache, etc.):
 
 ```bash
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 3. Lint the Code
 
-## Learn more
+```bash
+npm run lint
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Main Dependencies
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- React Native: 0.79.4
+- React: 19.0.0
+- Expo: ~53.0.12
+- Expo Router: ~5.1.0
+- Supabase: ^2.50.0
+- Other commonly used libraries:  
+  - @expo/vector-icons  
+  - react-native-paper  
+  - react-native-calendars  
+  - lottie-react-native  
+  - react-native-webview  
+  - and more
 
-## Join the community
+For a full list of dependencies, see [package.json](./package.json).
 
-Join our community of developers creating universal apps.
+## Development Tools
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- TypeScript: ~5.8.3
+- ESLint: ^9.25.0
+- @babel/core: ^7.25.2
+
+## Contributing
+
+1. Fork this repository
+2. Create a new branch (`git checkout -b main`)
+3. Commit your changes (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is private ("private": true). For collaboration inquiries, please contact the author.
+
+---
+
+Feel free to add project screenshots, API documentation, feature descriptions, or any other information as needed.

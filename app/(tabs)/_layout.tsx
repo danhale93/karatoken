@@ -1,8 +1,12 @@
+// Powered by OnSpace.AI
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { useAuthStore } from '../../hooks/useAuthStore';
 
 export default function TabLayout() {
+  const { user } = useAuthStore();
+
   return (
     <Tabs
       screenOptions={{
@@ -32,42 +36,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="sing"
-        options={{
-          title: 'Sing',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="mic" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="studio"
-        options={{
-          title: 'Studio',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="music-note" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="royalties"
-        options={{
-          title: 'Royalties',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="account-balance-wallet" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="challenges"
-        options={{
-          title: 'Challenges',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="emoji-events" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="leaderboard"
         options={{
           title: 'Leaderboard',
@@ -77,11 +45,29 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="battle"
+        options={{
+          title: 'Battle',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="flash-on" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="wallet"
         options={{
           title: 'Wallet',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="account-balance-wallet" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="person" size={size} color={color} />
           ),
         }}
       />
