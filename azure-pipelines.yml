@@ -1,0 +1,37 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'  # Use Node 20 for React Native 0.79
+  displayName: 'Install Node.js'
+
+- script: yarn install
+  displayName: 'Install dependencies'
+
+- script: npx expo install --fix
+  displayName: 'Fix Expo dependencies'
+
+# Build Android (APK/AAB)
+- script: npx expo build:android --type apk  # Or --type app-bundle for AAB
+  displayName: 'Build Android APK'
+  env:
+    EXPO_CLI_USERNAME: '$(EXPO_USERNAME)'  # Add these as pipeline variables
+    EXPO_CLI_PASSWORD: '$(EXPO_PASSWORD)'
+
+# Build iOS (IPA)
+- script: npx expo build:ios
+  displayName: 'Build iOS IPA'
+  env:
+    EXPO_CLI_USERNAME: '$(EXPO_USERNAME)'
+    EXPO_CLI_PASSWORD: '$(EXPO_PASSWORD)'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/dist'  # Adjust if needed
+    ArtifactName: 'build-artifacts'
+  displayName: 'Publish artifacts' 
