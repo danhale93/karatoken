@@ -1,5 +1,4 @@
-// Powered by OnSpace.AI
-import { Platform } from 'react-native';
+import { supabase } from '../lib/supabase';
 
 export interface User {
   id: string;
@@ -14,136 +13,151 @@ export interface User {
 class AuthService {
   async signIn(email: string, password: string): Promise<User> {
     try {
-      // TODO: Replace with actual Firebase Auth implementation
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      if (!response.ok) {
-        throw new Error('Invalid credentials');
+      if (error) throw error;
+
+      if (!data.user) throw new Error('No user data returned');
+
+      // Get user profile from profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
       }
 
-      const userData = await response.json();
-      return userData.user;
+      return {
+        id: data.user.id,
+        email: data.user.email || '',
+        displayName: profile?.display_name || data.user.user_metadata?.display_name || 'User',
+        photoURL: profile?.avatar_url || data.user.user_metadata?.avatar_url,
+        rank: this.calculateRank(profile?.total_wins || 0),
+        krtBalance: profile?.total_earnings || 0,
+        createdAt: data.user.created_at || new Date().toISOString(),
+      };
     } catch (error) {
-      // Mock implementation for demo
-      if (email === 'demo@karatoken.com' && password === 'demo123') {
-        return {
-          id: 'demo-user-1',
-          email: 'demo@karatoken.com',
-          displayName: 'Demo User',
-          photoURL: 'https://picsum.photos/seed/user/150/150.webp',
-          rank: 'Gold',
-          krtBalance: 1250,
-          createdAt: new Date().toISOString(),
-        };
-      }
+      console.error('Sign in error:', error);
       throw new Error('Invalid email or password');
     }
   }
 
   async signUp(email: string, password: string, displayName: string): Promise<User> {
     try {
-      // TODO: Replace with actual Firebase Auth implementation
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName,
+          },
         },
-        body: JSON.stringify({ email, password, displayName }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create account');
-      }
+      if (error) throw error;
 
-      const userData = await response.json();
-      return userData.user;
-    } catch (error) {
-      // Mock implementation for demo
+      if (!data.user) throw new Error('No user data returned');
+
       return {
-        id: `user-${Date.now()}`,
-        email,
-        displayName,
-        photoURL: `https://picsum.photos/seed/${email}/150/150.webp`,
+        id: data.user.id,
+        email: data.user.email || '',
+        displayName: displayName,
+        photoURL: data.user.user_metadata?.avatar_url,
         rank: 'Bronze',
         krtBalance: 100,
-        createdAt: new Date().toISOString(),
+        createdAt: data.user.created_at || new Date().toISOString(),
       };
+    } catch (error) {
+      console.error('Sign up error:', error);
+      throw new Error('Failed to create account');
     }
   }
 
   async signInWithGoogle(): Promise<User> {
     try {
-      // TODO: Replace with actual Google Sign-In implementation
-      // For now, return mock user data
-      return {
-        id: `google-user-${Date.now()}`,
-        email: 'user@gmail.com',
-        displayName: 'Google User',
-        photoURL: 'https://picsum.photos/seed/google/150/150.webp',
-        rank: 'Silver',
-        krtBalance: 500,
-        createdAt: new Date().toISOString(),
-      };
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+
+      if (error) throw error;
+
+      // This will redirect on web or open the OAuth flow
+      // The actual user data will be available after the redirect
+      throw new Error('OAuth redirect in progress');
     } catch (error) {
+      console.error('Google sign in error:', error);
       throw new Error('Google sign-in failed');
     }
   }
 
   async signInWithApple(): Promise<User> {
     try {
-      // TODO: Replace with actual Apple Sign-In implementation
-      // For now, return mock user data
-      return {
-        id: `apple-user-${Date.now()}`,
-        email: 'user@icloud.com',
-        displayName: 'Apple User',
-        photoURL: 'https://picsum.photos/seed/apple/150/150.webp',
-        rank: 'Silver',
-        krtBalance: 750,
-        createdAt: new Date().toISOString(),
-      };
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+      });
+
+      if (error) throw error;
+
+      // This will redirect on web or open the OAuth flow
+      throw new Error('OAuth redirect in progress');
     } catch (error) {
+      console.error('Apple sign in error:', error);
       throw new Error('Apple sign-in failed');
     }
   }
 
   async signOut(): Promise<void> {
     try {
-      // TODO: Replace with actual Firebase Auth signOut
-      await fetch('/api/auth/signout', {
-        method: 'POST',
-      });
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
       console.error('Sign out error:', error);
+      throw error;
     }
   }
 
   async updateProfile(userId: string, updates: Partial<User>): Promise<User> {
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
+      // Update the profiles table
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          display_name: updates.displayName,
+          avatar_url: updates.photoURL,
+        })
+        .eq('user_id', userId)
+        .select()
+        .single();
 
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
+      if (error) throw error;
 
-      const userData = await response.json();
-      return userData.user;
+      return {
+        id: userId,
+        email: updates.email || '',
+        displayName: data.display_name || '',
+        photoURL: data.avatar_url,
+        rank: this.calculateRank(data.total_wins || 0),
+        krtBalance: data.total_earnings || 0,
+        createdAt: data.created_at || new Date().toISOString(),
+      };
     } catch (error) {
+      console.error('Update profile error:', error);
       throw new Error('Failed to update profile');
     }
+  }
+
+  private calculateRank(totalWins: number): string {
+    if (totalWins >= 100) return 'Diamond';
+    if (totalWins >= 50) return 'Platinum';
+    if (totalWins >= 25) return 'Gold';
+    if (totalWins >= 10) return 'Silver';
+    return 'Bronze';
   }
 }
 

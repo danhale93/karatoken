@@ -1,7 +1,7 @@
-// Powered by OnSpace.AI
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from '../services/authService';
+import { supabase } from '../lib/supabase';
 
 interface User {
   id: string;
@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const user = await authService.signIn(email, password);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.setItem('user_session', JSON.stringify(user));
       set({ user, isAuthenticated: true });
     } catch (error) {
       throw error;
@@ -48,7 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const user = await authService.signUp(email, password, displayName);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.setItem('user_session', JSON.stringify(user));
       set({ user, isAuthenticated: true });
     } catch (error) {
       throw error;
@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const user = await authService.signInWithGoogle();
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.setItem('user_session', JSON.stringify(user));
       set({ user, isAuthenticated: true });
     } catch (error) {
       throw error;
@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const user = await authService.signInWithApple();
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.setItem('user_session', JSON.stringify(user));
       set({ user, isAuthenticated: true });
     } catch (error) {
       throw error;
@@ -86,7 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     try {
       await authService.signOut();
-      await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('user_session');
       set({ user: null, isAuthenticated: false });
     } catch (error) {
       console.error('Sign out error:', error);
@@ -96,13 +96,40 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initializeAuth: async () => {
     set({ isLoading: true });
     try {
-      const savedUser = await AsyncStorage.getItem('user');
-      if (savedUser) {
-        const user = JSON.parse(savedUser);
+      // Check Supabase session first
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Get user profile data
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+
+        const user: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          displayName: profile?.display_name || session.user.user_metadata?.display_name || 'User',
+          photoURL: profile?.avatar_url || session.user.user_metadata?.avatar_url,
+          rank: calculateRank(profile?.total_wins || 0),
+          krtBalance: profile?.total_earnings || 0,
+          createdAt: session.user.created_at || new Date().toISOString(),
+        };
+
+        await AsyncStorage.setItem('user_session', JSON.stringify(user));
         set({ user, isAuthenticated: true });
+      } else {
+        // Fallback to AsyncStorage
+        const savedUser = await AsyncStorage.getItem('user_session');
+        if (savedUser) {
+          const user = JSON.parse(savedUser);
+          set({ user, isAuthenticated: true });
+        }
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
+      await AsyncStorage.removeItem('user_session');
     } finally {
       set({ isLoading: false });
     }
@@ -114,10 +141,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       const updatedUser = await authService.updateProfile(user.id, updates);
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      await AsyncStorage.setItem('user_session', JSON.stringify(updatedUser));
       set({ user: updatedUser });
     } catch (error) {
       throw error;
     }
   },
 }));
+
+function calculateRank(totalWins: number): string {
+  if (totalWins >= 100) return 'Diamond';
+  if (totalWins >= 50) return 'Platinum';
+  if (totalWins >= 25) return 'Gold';
+  if (totalWins >= 10) return 'Silver';
+  return 'Bronze';
+}
