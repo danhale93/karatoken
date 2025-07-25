@@ -1,58 +1,75 @@
-import * as Facebook from 'expo-auth-session/providers/facebook';
-import * as Google from 'expo-auth-session/providers/google';
 import { useRouter } from 'expo-router';
-import { createUserWithEmailAndPassword, FacebookAuthProvider, GoogleAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
-import React, { useEffect } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
-import { auth } from '../firebaseConfig';
-
+import React from 'react';
+import { Alert, Button, Platform, StyleSheet, Text, TextInput, View, Modal, TouchableOpacity } from 'react-native';
+import { authService } from '../services/authService';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const [username, setUsername] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [userType, setUserType] = React.useState('singer');
-  const [error, setError] = React.useState('');
-  const [success, setSuccess] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
-  const handleRegister = async () => {
-    setError('');
-    setSuccess('');
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      // Optionally set display name
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, { displayName: username });
-      }
-      setSuccess('Registration successful!');
-      // Optionally redirect to login
-      // router.push('/login');
-    } catch (err: any) {
-      setError(err.message || 'Registration failed');
+  // Web alert state
+  const [alertConfig, setAlertConfig] = React.useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onOk?: () => void;
+  }>({ visible: false, title: '', message: '' });
+
+  const showAlert = (title: string, message: string, onOk?: () => void) => {
+    if (Platform.OS === 'web') {
+      setAlertConfig({ visible: true, title, message, onOk });
+    } else {
+      Alert.alert(title, message, onOk ? [{ text: 'OK', onPress: onOk }] : undefined);
     }
   };
 
-  const [, googleResponse, googlePromptAsync] = Google.useIdTokenAuthRequest({
-    clientId: '116553890071877164974',
-  });
-  const [, fbResponse, fbPromptAsync] = Facebook.useAuthRequest({
-    clientId: 'YOUR_ACTUAL_FACEBOOK_APP_ID', // Obtain from Firebase console
-  });
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      const credential = GoogleAuthProvider.credential(googleResponse.params.id_token);
-      signInWithCredential(auth, credential);
+  const handleRegister = async () => {
+    if (!username.trim() || !email.trim() || !password.trim()) {
+      showAlert('Error', 'Please fill in all fields');
+      return;
     }
-  }, [googleResponse]);
 
-  useEffect(() => {
-    if (fbResponse?.type === 'success') {
-      const credential = FacebookAuthProvider.credential(fbResponse.params.access_token);
-      signInWithCredential(auth, credential);
+    if (password.length < 6) {
+      showAlert('Error', 'Password must be at least 6 characters long');
+      return;
     }
-  }, [fbResponse]);
+
+    setLoading(true);
+    try {
+      const user = await authService.signUp(email, password, username);
+      showAlert('Success', 'Registration successful! Please check your email to verify your account.', () => {
+        router.push('/profile-setup');
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      showAlert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await authService.signInWithGoogle();
+    } catch (error) {
+      if (error instanceof Error && error.message !== 'OAuth redirect in progress') {
+        showAlert('Error', 'Google sign-in is not available on this platform');
+      }
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      await authService.signInWithApple();
+    } catch (error) {
+      if (error instanceof Error && error.message !== 'OAuth redirect in progress') {
+        showAlert('Error', 'Apple sign-in is not available on this platform');
+      }
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -63,6 +80,7 @@ export default function RegisterScreen() {
         placeholderTextColor="#9CA3AF"
         value={username}
         onChangeText={setUsername}
+        autoCapitalize="none"
       />
       <TextInput
         style={styles.input}
@@ -70,6 +88,8 @@ export default function RegisterScreen() {
         placeholderTextColor="#9CA3AF"
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         style={styles.input}
@@ -79,14 +99,67 @@ export default function RegisterScreen() {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Register" onPress={handleRegister} />
-      {error ? <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text> : null}
-      {success ? <Text style={{ color: 'green', marginTop: 10 }}>{success}</Text> : null}
-      <Button title="Continue" onPress={() => router.push('/profile-setup')} />
+      <Button 
+        title={loading ? "Creating account..." : "Register"} 
+        onPress={handleRegister}
+        disabled={loading}
+      />
+      
+      <View style={{ marginTop: 16 }}>
+        <Button 
+          title="Continue to Profile Setup" 
+          onPress={() => router.push('/profile-setup')} 
+        />
+      </View>
+      
       <View style={{ height: 16 }} />
-      <Button title="Try Live Pitch Scoring" onPress={() => router.push('/(tabs)/live-pitch-scoring')} />
-      <Button title="Register with Google" onPress={() => googlePromptAsync()} />
-      <Button title="Register with Facebook" onPress={() => fbPromptAsync()} />
+      
+      <Button 
+        title="Try Live Pitch Scoring" 
+        onPress={() => router.push('/(tabs)/live-pitch-scoring')} 
+      />
+      
+      <View style={{ marginTop: 16 }}>
+        <Button 
+          title="Register with Google" 
+          onPress={handleGoogleSignIn} 
+        />
+      </View>
+      
+      <View style={{ marginTop: 8 }}>
+        <Button 
+          title="Register with Apple" 
+          onPress={handleAppleSignIn} 
+        />
+      </View>
+
+      <View style={{ marginTop: 16 }}>
+        <Button 
+          title="Already have an account? Login" 
+          onPress={() => router.push('/login')} 
+        />
+      </View>
+
+      {/* Web Alert Modal */}
+      {Platform.OS === 'web' && (
+        <Modal visible={alertConfig.visible} transparent animationType="fade">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 8, minWidth: 280 }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>{alertConfig.title}</Text>
+              <Text style={{ fontSize: 16, marginBottom: 20 }}>{alertConfig.message}</Text>
+              <TouchableOpacity 
+                style={{ backgroundColor: '#007AFF', padding: 10, borderRadius: 4, alignItems: 'center' }}
+                onPress={() => {
+                  alertConfig.onOk?.();
+                  setAlertConfig(prev => ({ ...prev, visible: false }));
+                }}
+              >
+                <Text style={{ color: 'white', fontWeight: 'bold' }}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }

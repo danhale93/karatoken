@@ -1,27 +1,47 @@
-
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import React from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
-import { auth } from '../firebaseConfig';
+import { Alert, Button, Platform, StyleSheet, Text, TextInput, View, Modal, TouchableOpacity } from 'react-native';
+import { authService } from '../services/authService';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState('');
-  const [success, setSuccess] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
+  // Web alert state
+  const [alertConfig, setAlertConfig] = React.useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onOk?: () => void;
+  }>({ visible: false, title: '', message: '' });
+
+  const showAlert = (title: string, message: string, onOk?: () => void) => {
+    if (Platform.OS === 'web') {
+      setAlertConfig({ visible: true, title, message, onOk });
+    } else {
+      Alert.alert(title, message, onOk ? [{ text: 'OK', onPress: onOk }] : undefined);
+    }
+  };
 
   const handleLogin = async () => {
-    setError('');
-    setSuccess('');
+    if (!email.trim() || !password.trim()) {
+      showAlert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setSuccess('Login successful!');
-      // Optionally navigate to home or dashboard
-      // router.push('/');
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+      const user = await authService.signIn(email, password);
+      showAlert('Success', 'Login successful!', () => {
+        router.replace('/(tabs)');
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      showAlert('Error', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,6 +54,8 @@ export default function LoginScreen() {
         placeholderTextColor="#9CA3AF"
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         style={styles.input}
@@ -43,10 +65,38 @@ export default function LoginScreen() {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
-      {error ? <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text> : null}
-      {success ? <Text style={{ color: 'green', marginTop: 10 }}>{success}</Text> : null}
-      <Button title="Register" onPress={() => router.push('/register')} />
+      <Button 
+        title={loading ? "Signing in..." : "Login"} 
+        onPress={handleLogin}
+        disabled={loading}
+      />
+      <View style={{ marginTop: 16 }}>
+        <Button 
+          title="Don't have an account? Register" 
+          onPress={() => router.push('/register')} 
+        />
+      </View>
+
+      {/* Web Alert Modal */}
+      {Platform.OS === 'web' && (
+        <Modal visible={alertConfig.visible} transparent animationType="fade">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 8, minWidth: 280 }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>{alertConfig.title}</Text>
+              <Text style={{ fontSize: 16, marginBottom: 20 }}>{alertConfig.message}</Text>
+              <TouchableOpacity 
+                style={{ backgroundColor: '#007AFF', padding: 10, borderRadius: 4, alignItems: 'center' }}
+                onPress={() => {
+                  alertConfig.onOk?.();
+                  setAlertConfig(prev => ({ ...prev, visible: false }));
+                }}
+              >
+                <Text style={{ color: 'white', fontWeight: 'bold' }}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }

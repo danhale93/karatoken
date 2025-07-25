@@ -4,16 +4,11 @@ import { BASE_URL } from '../app/config';
 import * as Notifications from 'expo-notifications';
 // @ts-ignore
 import * as Sharing from 'expo-sharing';
-// ...existing code...
-// Add Firebase imports
-import { addDoc, collection, doc, doc as fsDoc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-
-
 import * as React from 'react';
 import { ActivityIndicator, Alert, Animated, Button, Clipboard, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import RoyaltiesScreen from '../app/(tabs)/royalties';
 import { getCurrentUserId } from '../hooks/useUserId';
+import { supabase } from '../lib/supabase';
 
 
 
@@ -69,20 +64,31 @@ export default function RewardRoyaltyActions(props: RewardRoyaltyActionsProps) {
   const sendChat = async () => {
     if (!battleId || !userId || !chatInput.trim()) return;
     const cleanMsg = filterProfanity(chatInput);
-    const chatRef = collection(db, 'battles', battleId, 'chat');
-    await addDoc(chatRef, {
-      userId,
-      message: cleanMsg,
-      timestamp: new Date(),
-    });
-    setChatInput('');
-    // Push notification to other users (demo)
+    
     try {
-      await Notifications.scheduleNotificationAsync({
-        content: { title: 'New Battle Chat', body: `${userId}: ${cleanMsg}` },
-        trigger: null,
-      });
-    } catch {}
+      const { error } = await supabase
+        .from('battle_messages')
+        .insert({
+          battle_id: battleId,
+          user_id: userId,
+          message: cleanMsg,
+          created_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+      
+      setChatInput('');
+      
+      // Push notification to other users (demo)
+      try {
+        await Notifications.scheduleNotificationAsync({
+          content: { title: 'New Battle Chat', body: `${userId}: ${cleanMsg}` },
+          trigger: null,
+        });
+      } catch {}
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+    }
   };
 
   // Report/block user (demo)
@@ -135,36 +141,64 @@ export default function RewardRoyaltyActions(props: RewardRoyaltyActionsProps) {
 
   // Subscribe to chat messages if in battle mode
   React.useEffect(() => {
-    let unsub: (() => void) | undefined;
+    let unsubscribe: (() => void) | undefined;
     if (battleId && visible) {
-      const chatRef = collection(db, 'battles', battleId, 'chat');
-      const q = query(chatRef, orderBy('timestamp', 'asc'));
-      unsub = onSnapshot(q, (snap) => {
-        setChatMessages(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      });
+      // Using Supabase real-time subscriptions for battle chat
+      const subscription = supabase
+        .channel(`battle-chat-${battleId}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'battle_messages',
+          filter: `battle_id=eq.${battleId}`
+        }, (payload) => {
+          // Handle real-time chat updates
+          console.log('Chat message update:', payload);
+        })
+        .subscribe();
+
+      unsubscribe = () => subscription.unsubscribe();
     }
-    return () => { if (unsub) unsub(); };
+    return () => { if (unsubscribe) unsubscribe(); };
   }, [battleId, visible]);
 
   // Listen for rematch request
   React.useEffect(() => {
-    let unsub: (() => void) | undefined;
+    let unsubscribe: (() => void) | undefined;
     if (battleId && visible) {
-      const battleDoc = fsDoc(db, 'battles', battleId);
-      unsub = onSnapshot(battleDoc, (snap) => {
-        if (snap.exists()) setRematchRequested(!!snap.data().rematchRequested);
-      });
-    }
-    return () => { if (unsub) unsub(); };
-  }, [battleId, visible]);
+      // Using Supabase real-time subscriptions for battle updates
+      const subscription = supabase
+        .channel(`battle-${battleId}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'battles',
+          filter: `id=eq.${battleId}`
+        }, (payload) => {
+          if (payload.new && typeof payload.new === 'object' && 'rematch_requested' in payload.new) {
+            setRematchRequested(!!payload.new.rematch_requested);
+          }
+        })
+        .subscribe();
 
-  // (Removed duplicate sendChat)
+      unsubscribe = () => subscription.unsubscribe();
+    }
+    return () => { if (unsubscribe) unsubscribe(); };
+  }, [battleId, visible]);
 
   // Request rematch
   const requestRematch = async () => {
     if (!battleId) return;
-    const battleDoc = fsDoc(db, 'battles', battleId);
-    await updateDoc(battleDoc, { rematchRequested: true });
+    try {
+      const { error } = await supabase
+        .from('battles')
+        .update({ rematch_requested: true })
+        .eq('id', battleId);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error requesting rematch:', error);
+    }
   };
 
   const fetchWallet = async (userId: string) => {
@@ -198,13 +232,22 @@ export default function RewardRoyaltyActions(props: RewardRoyaltyActionsProps) {
     if (visible && !showRoyalties) {
       refreshAll();
       if (battleId) {
-        // Subscribe to Firestore real-time updates for this battle
-        const battleDoc = doc(db, 'battles', battleId);
-        unsub = onSnapshot(battleDoc, (snapshot) => {
-          if (snapshot.exists()) {
-            setBattleStatus(snapshot.data());
-          }
-        });
+        // Subscribe to Supabase real-time updates for this battle
+        const subscription = supabase
+          .channel(`battle-status-${battleId}`)
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'battles',
+            filter: `id=eq.${battleId}`
+          }, (payload) => {
+            if (payload.new) {
+              setBattleStatus(payload.new);
+            }
+          })
+          .subscribe();
+
+        unsub = () => subscription.unsubscribe();
       }
     }
     return () => {
