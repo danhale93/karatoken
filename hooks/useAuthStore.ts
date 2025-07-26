@@ -26,6 +26,14 @@ interface AuthState {
   updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 
+function calculateRank(totalWins: number): string {
+  if (totalWins >= 100) return 'Diamond';
+  if (totalWins >= 50) return 'Platinum';
+  if (totalWins >= 25) return 'Gold';
+  if (totalWins >= 10) return 'Silver';
+  return 'Bronze';
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: false,
@@ -38,6 +46,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await AsyncStorage.setItem('user_session', JSON.stringify(user));
       set({ user, isAuthenticated: true });
     } catch (error) {
+      console.error('Sign in error:', error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -51,6 +60,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await AsyncStorage.setItem('user_session', JSON.stringify(user));
       set({ user, isAuthenticated: true });
     } catch (error) {
+      console.error('Sign up error:', error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -64,6 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await AsyncStorage.setItem('user_session', JSON.stringify(user));
       set({ user, isAuthenticated: true });
     } catch (error) {
+      console.error('Google sign in error:', error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -77,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await AsyncStorage.setItem('user_session', JSON.stringify(user));
       set({ user, isAuthenticated: true });
     } catch (error) {
+      console.error('Apple sign in error:', error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -84,12 +96,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
+    set({ isLoading: true });
     try {
       await authService.signOut();
       await AsyncStorage.removeItem('user_session');
       set({ user: null, isAuthenticated: false });
     } catch (error) {
       console.error('Sign out error:', error);
+    } finally {
+      set({ isLoading: false });
     }
   },
 
@@ -123,13 +138,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Fallback to AsyncStorage
         const savedUser = await AsyncStorage.getItem('user_session');
         if (savedUser) {
-          const user = JSON.parse(savedUser);
-          set({ user, isAuthenticated: true });
+          try {
+            const user = JSON.parse(savedUser);
+            set({ user, isAuthenticated: true });
+          } catch (parseError) {
+            console.error('Error parsing saved user:', parseError);
+            await AsyncStorage.removeItem('user_session');
+          }
         }
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
       await AsyncStorage.removeItem('user_session');
+      set({ user: null, isAuthenticated: false });
     } finally {
       set({ isLoading: false });
     }
@@ -137,22 +158,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   updateProfile: async (updates: Partial<User>) => {
     const { user } = get();
-    if (!user) return;
+    if (!user) {
+      throw new Error('No user logged in');
+    }
 
+    set({ isLoading: true });
     try {
       const updatedUser = await authService.updateProfile(user.id, updates);
       await AsyncStorage.setItem('user_session', JSON.stringify(updatedUser));
       set({ user: updatedUser });
     } catch (error) {
+      console.error('Update profile error:', error);
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
 }));
-
-function calculateRank(totalWins: number): string {
-  if (totalWins >= 100) return 'Diamond';
-  if (totalWins >= 50) return 'Platinum';
-  if (totalWins >= 25) return 'Gold';
-  if (totalWins >= 10) return 'Silver';
-  return 'Bronze';
-}
