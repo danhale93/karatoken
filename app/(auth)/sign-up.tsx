@@ -1,16 +1,16 @@
-// Powered by OnSpace.AI
 import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -28,28 +28,89 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const { signUp, signInWithGoogle, signInWithApple } = useAuthStore();
 
-  const handleSignUp = async () => {
-    if (!email || !password || !confirmPassword || !displayName) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+  // Web alert state
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onOk?: () => void;
+  }>({ visible: false, title: '', message: '' });
+
+  const showAlert = (title: string, message: string, onOk?: () => void) => {
+    if (Platform.OS === 'web') {
+      setAlertConfig({ visible: true, title, message, onOk });
+    } else {
+      const { Alert } = require('react-native');
+      Alert.alert(title, message, onOk ? [{ text: 'OK', onPress: onOk }] : undefined);
+    }
+  };
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = (): string | null => {
+    if (!displayName.trim()) {
+      return 'Display name is required';
+    }
+    
+    if (displayName.trim().length < 2) {
+      return 'Display name must be at least 2 characters';
+    }
+
+    if (!email.trim()) {
+      return 'Email is required';
+    }
+
+    if (!validateEmail(email)) {
+      return 'Please enter a valid email address';
+    }
+
+    if (!password) {
+      return 'Password is required';
+    }
+
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      return 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+    }
+
+    if (!confirmPassword) {
+      return 'Please confirm your password';
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
+      return 'Passwords do not match';
     }
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+    return null;
+  };
+
+  const handleSignUp = async () => {
+    const validationError = validateForm();
+    if (validationError) {
+      showAlert('Validation Error', validationError);
       return;
     }
 
     setLoading(true);
     try {
-      await signUp(email, password, displayName);
-      router.replace('/(tabs)');
+      await signUp(email.trim().toLowerCase(), password, displayName.trim());
+      showAlert(
+        'Success!', 
+        'Account created successfully! Please check your email to verify your account.',
+        () => {
+          router.replace('/(tabs)');
+        }
+      );
     } catch (error) {
-      Alert.alert('Sign Up Failed', error.message);
+      console.error('Sign up error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
+      showAlert('Sign Up Failed', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -57,24 +118,36 @@ export default function SignUpScreen() {
 
   const handleGoogleSignUp = async () => {
     try {
+      setLoading(true);
       await signInWithGoogle();
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Google Sign Up Failed', error.message);
+      console.error('Google sign up error:', error);
+      if (error instanceof Error && error.message !== 'OAuth redirect in progress') {
+        showAlert('Google Sign Up Failed', 'Google sign-up is not available on this platform');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAppleSignUp = async () => {
     try {
+      setLoading(true);
       await signInWithApple();
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Apple Sign Up Failed', error.message);
+      console.error('Apple sign up error:', error);
+      if (error instanceof Error && error.message !== 'OAuth redirect in progress') {
+        showAlert('Apple Sign Up Failed', 'Apple sign-up is not available on this platform');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -106,6 +179,8 @@ export default function SignUpScreen() {
                 onChangeText={setDisplayName}
                 autoCapitalize="words"
                 autoCorrect={false}
+                maxLength={30}
+                editable={!loading}
               />
             </View>
 
@@ -120,6 +195,8 @@ export default function SignUpScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="email"
+                editable={!loading}
               />
             </View>
 
@@ -127,16 +204,19 @@ export default function SignUpScreen() {
               <MaterialIcons name="lock" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Password"
+                placeholder="Password (min 8 characters)"
                 placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                autoComplete="new-password"
+                editable={!loading}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
                 onPress={() => setShowPassword(!showPassword)}
+                disabled={loading}
               >
                 <MaterialIcons
                   name={showPassword ? 'visibility' : 'visibility-off'}
@@ -156,10 +236,13 @@ export default function SignUpScreen() {
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
+                autoComplete="new-password"
+                editable={!loading}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={loading}
               >
                 <MaterialIcons
                   name={showConfirmPassword ? 'visibility' : 'visibility-off'}
@@ -175,12 +258,14 @@ export default function SignUpScreen() {
               disabled={loading}
             >
               <LinearGradient
-                colors={['#6B46C1', '#8B5CF6']}
+                colors={loading ? ['#4B5563', '#6B7280'] : ['#6B46C1', '#8B5CF6']}
                 style={styles.buttonGradient}
               >
-                <Text style={styles.signUpButtonText}>
-                  {loading ? 'Creating Account...' : 'Create Account'}
-                </Text>
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.signUpButtonText}>Create Account</Text>
+                )}
               </LinearGradient>
             </TouchableOpacity>
 
@@ -192,13 +277,21 @@ export default function SignUpScreen() {
             </View>
 
             <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignUp}>
+              <TouchableOpacity 
+                style={[styles.socialButton, loading && styles.disabledButton]} 
+                onPress={handleGoogleSignUp}
+                disabled={loading}
+              >
                 <MaterialIcons name="login" size={24} color="#FFFFFF" />
                 <Text style={styles.socialButtonText}>Google</Text>
               </TouchableOpacity>
 
               {Platform.OS === 'ios' && (
-                <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignUp}>
+                <TouchableOpacity 
+                  style={[styles.socialButton, loading && styles.disabledButton]} 
+                  onPress={handleAppleSignUp}
+                  disabled={loading}
+                >
                   <MaterialIcons name="login" size={24} color="#FFFFFF" />
                   <Text style={styles.socialButtonText}>Apple</Text>
                 </TouchableOpacity>
@@ -211,14 +304,35 @@ export default function SignUpScreen() {
             <Text style={styles.footerText}>
               Already have an account?{' '}
               <Text 
-                style={styles.linkText}
-                onPress={() => router.push('/(auth)/sign-in')}
+                style={[styles.linkText, loading && styles.disabledText]}
+                onPress={loading ? undefined : () => router.push('/(auth)/sign-in')}
               >
                 Sign In
               </Text>
             </Text>
           </View>
         </View>
+
+        {/* Web Alert Modal */}
+        {Platform.OS === 'web' && (
+          <Modal visible={alertConfig.visible} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>{alertConfig.title}</Text>
+                <Text style={styles.modalMessage}>{alertConfig.message}</Text>
+                <TouchableOpacity 
+                  style={styles.modalButton}
+                  onPress={() => {
+                    alertConfig.onOk?.();
+                    setAlertConfig(prev => ({ ...prev, visible: false }));
+                  }}
+                >
+                  <Text style={styles.modalButtonText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -252,6 +366,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#9CA3AF',
     textAlign: 'center',
+    lineHeight: 22,
   },
   form: {
     marginBottom: 40,
@@ -265,23 +380,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderWidth: 1,
     borderColor: '#374151',
+    minHeight: 56,
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    height: 50,
     color: '#FFFFFF',
     fontSize: 16,
+    lineHeight: 20,
   },
   eyeIcon: {
-    padding: 5,
+    padding: 8,
+    marginRight: -8,
   },
   signUpButton: {
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 30,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   disabledButton: {
     opacity: 0.7,
@@ -289,6 +414,8 @@ const styles = StyleSheet.create({
   buttonGradient: {
     paddingVertical: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
   },
   signUpButtonText: {
     color: '#FFFFFF',
@@ -320,9 +447,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#374151',
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
+    minHeight: 52,
   },
   socialButtonText: {
     color: '#FFFFFF',
@@ -335,9 +463,51 @@ const styles = StyleSheet.create({
   footerText: {
     color: '#9CA3AF',
     fontSize: 14,
+    textAlign: 'center',
   },
   linkText: {
     color: '#10B981',
     fontWeight: '600',
+  },
+  disabledText: {
+    opacity: 0.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 24,
+    borderRadius: 12,
+    minWidth: 300,
+    maxWidth: 400,
+    width: '100%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#111827',
+  },
+  modalMessage: {
+    fontSize: 16,
+    marginBottom: 24,
+    color: '#374151',
+    lineHeight: 22,
+  },
+  modalButton: {
+    backgroundColor: '#6B46C1',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

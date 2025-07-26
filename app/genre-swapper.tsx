@@ -3,12 +3,77 @@ import React, { useRef, useState } from 'react';
 import { WebView } from 'react-native-webview';
 import { fetchLyricsForYoutube, getCurrentLyricLine } from './lyrics-utils';
 
-
-import { ActivityIndicator, Alert, Button, KeyboardAvoidingView, Platform, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-
-import Slider from '@react-native-community/slider';
+import { ActivityIndicator, Alert, Button, KeyboardAvoidingView, Platform, StyleSheet, Switch, Text, TextInput, View, TouchableOpacity, PanResponder, Dimensions } from 'react-native';
 
 import { BASE_URL } from './config';
+
+// Custom Slider Component
+interface CustomSliderProps {
+  value: number;
+  onValueChange: (value: number) => void;
+  minimumValue: number;
+  maximumValue: number;
+  style?: any;
+  minimumTrackTintColor?: string;
+  maximumTrackTintColor?: string;
+}
+
+const CustomSlider: React.FC<CustomSliderProps> = ({
+  value,
+  onValueChange,
+  minimumValue,
+  maximumValue,
+  style,
+  minimumTrackTintColor = '#10B981',
+  maximumTrackTintColor = '#232946'
+}) => {
+  const [sliderWidth, setSliderWidth] = useState(200);
+  
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderMove: (evt) => {
+      const { locationX } = evt.nativeEvent;
+      const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
+      const newValue = minimumValue + (maximumValue - minimumValue) * percentage;
+      onValueChange(newValue);
+    },
+  });
+
+  const trackPosition = ((value - minimumValue) / (maximumValue - minimumValue)) * sliderWidth;
+
+  return (
+    <View 
+      style={[{ height: 40, justifyContent: 'center' }, style]}
+      onLayout={(event) => setSliderWidth(event.nativeEvent.layout.width)}
+      {...panResponder.panHandlers}
+    >
+      <View style={{
+        height: 4,
+        backgroundColor: maximumTrackTintColor,
+        borderRadius: 2,
+        position: 'absolute',
+        width: '100%'
+      }} />
+      <View style={{
+        height: 4,
+        backgroundColor: minimumTrackTintColor,
+        borderRadius: 2,
+        position: 'absolute',
+        width: trackPosition
+      }} />
+      <View style={{
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: minimumTrackTintColor,
+        position: 'absolute',
+        left: trackPosition - 10,
+        top: 10
+      }} />
+    </View>
+  );
+};
 
 export default function GenreSwapperScreen() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -229,11 +294,13 @@ export default function GenreSwapperScreen() {
           <Text style={{ color: '#fff', marginBottom: 4 }}>Choose Target Genre:</Text>
           <View style={styles.genreList}>
             {GENRES.map(g => (
-              <Text
+              <TouchableOpacity
                 key={g}
                 style={[styles.genreItem, genre === g && styles.genreSelected]}
                 onPress={() => setGenre(g)}
-              >{g}</Text>
+              >
+                <Text style={[styles.genreText, genre === g && styles.genreSelectedText]}>{g}</Text>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -244,7 +311,7 @@ export default function GenreSwapperScreen() {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
             <Text style={{ color: '#fff', marginRight: 8 }}>Backing Vocal Level</Text>
-            <Slider
+            <CustomSlider
               style={{ flex: 1 }}
               minimumValue={0}
               maximumValue={1}
@@ -310,18 +377,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   genreItem: {
-    color: '#9CA3AF',
     backgroundColor: '#232946',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     margin: 2,
-    fontSize: 14,
-    overflow: 'hidden',
   },
   genreSelected: {
-    color: '#fff',
     backgroundColor: '#10B981',
+  },
+  genreText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+  },
+  genreSelectedText: {
+    color: '#fff',
     fontWeight: 'bold',
   },
 });
