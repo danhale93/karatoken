@@ -8,11 +8,11 @@ The app is configured with ZegoCloud App ID: **1073526291**
 
 ## Environment Variables
 
-The following environment variables have been configured in `.env`:
+The following environment variables have been added to `.env`:
 
 ```
 EXPO_PUBLIC_ZEGO_APP_ID=1073526291
-EXPO_PUBLIC_ZEGO_APP_SIGN=952bf2fdc875692e336751aacaaeae13926141824613e39970e50aad709368e7
+EXPO_PUBLIC_ZEGO_APP_SIGN=your_app_sign_here
 ```
 
 ## Setup Steps
@@ -24,15 +24,13 @@ EXPO_PUBLIC_ZEGO_APP_SIGN=952bf2fdc875692e336751aacaaeae13926141824613e39970e50a
 3. Navigate to "Basic Configurations"
 4. Copy your App Sign (a long string starting with something like "0x...")
 
-### 2. Environment Variables Configuration
+### 2. Update Environment Variables
 
-The App Sign has been configured in `.env`:
+Replace `your_app_sign_here` in `.env` with your actual App Sign:
 
 ```
-EXPO_PUBLIC_ZEGO_APP_SIGN=952bf2fdc875692e336751aacaaeae13926141824613e39970e50aad709368e7
+EXPO_PUBLIC_ZEGO_APP_SIGN=0x1234567890abcdef...
 ```
-
-This enables the app to use real ZegoCloud services instead of the mock implementation.
 
 ### 3. Install ZegoCloud SDK (Optional for Production)
 
