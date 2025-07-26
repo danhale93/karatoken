@@ -11,6 +11,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../hooks/useAuthStore';
@@ -35,13 +36,25 @@ export default function BattleScreen() {
     }
   };
 
-  const handleJoinBattle = async (battleId: string) => {
+    const handleJoinBattle = async (battleId: string, songId?: string, songTitle?: string) => {
     try {
       await joinBattle(battleId);
-      Alert.alert('Success', 'You have joined the battle!');
-      router.push(`/battle/${battleId}`);
+      
+      // Navigate to ZegoCloud battle room
+      router.push({
+        pathname: '/zego-battle',
+        params: {
+          battleId,
+          songId: songId || 'default',
+          songTitle: songTitle || 'Unknown Song',
+        },
+      });
     } catch (error) {
-      Alert.alert('Error', 'Failed to join battle');
+      if (Platform.OS === 'web') {
+        alert('Failed to join battle');
+      } else {
+        Alert.alert('Error', 'Failed to join battle');
+      }
     }
   };
 
@@ -132,7 +145,7 @@ export default function BattleScreen() {
               styles.actionButton,
               !canJoin && styles.disabledButton,
             ]}
-            onPress={() => canJoin ? handleJoinBattle(item.id) : null}
+            onPress={() => canJoin ? handleJoinBattle(item.id, item.songId, item.songTitle) : null}
             disabled={!canJoin}
           >
             <Text style={styles.actionButtonText}>

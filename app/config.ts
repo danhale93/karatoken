@@ -4,7 +4,7 @@ export const BASE_URL = 'http://192.168.1.134:3000';
 // ZegoCloud Configuration
 export const ZEGO_CONFIG = {
   appID: parseInt(process.env.EXPO_PUBLIC_ZEGO_APP_ID || '1073526291'),
-  appSign: process.env.EXPO_PUBLIC_ZEGO_APP_SIGN || '952bf2fdc875692e336751aacaaeae13926141824613e39970e50aad709368e7',
+  appSign: process.env.EXPO_PUBLIC_ZEGO_APP_SIGN || '',
   scenario: 0, // General scenario
   enablePlatformView: true,
 };
